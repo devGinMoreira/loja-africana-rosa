@@ -1,0 +1,230 @@
+// Loja Africana Rosa - Database Schema
+// E-commerce platform for African specialty store
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User Model - Manages user accounts and authentication
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  avatar    String?
+  role      Role     @default(CUSTOMER)
+  
+  // Relations
+  orders    Order[]
+  cart      Cart?
+  addresses Address[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Product Model - Manages product catalog
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String   @db.Text
+  price       Float
+  originalPrice Float?
+  category    String
+  image       String
+  images      String[] // Array of additional images
+  stock       Int      @default(0)
+  sku         String   @unique
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  
+  // Flags
+  isFeatured  Boolean  @default(false)
+  isTopSeller Boolean  @default(false)
+  promoPercentage Int? // Discount percentage if on promotion
+  
+  // Relations
+  orderItems  OrderItem[]
+  cartItems   CartItem[]
+  reviews     Review[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([category])
+  @@index([slug])
+}
+
+// Cart Model - Shopping cart per user
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  items     CartItem[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// CartItem Model - Items in shopping cart
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  quantity  Int      @default(1)
+  price     Float    // Price at time of adding to cart
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+// Order Model - Customer orders
+model Order {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Order details
+  orderNumber   String   @unique
+  status        OrderStatus @default(PENDING)
+  
+  // Pricing
+  subtotal      Float
+  tax           Float    @default(0)
+  deliveryFee   Float    @default(0)
+  total         Float
+  
+  // Delivery
+  deliveryMethod String  // 'standard', 'express', 'pickup'
+  deliveryAddress String @db.Text
+  deliveryDate   DateTime?
+  
+  // Payment
+  paymentMethod String   // 'card', 'bank_transfer', 'paypal'
+  paymentStatus PaymentStatus @default(PENDING)
+  
+  // Relations
+  items         OrderItem[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// OrderItem Model - Individual items in an order
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  
+  quantity  Int
+  price     Float    // Price at time of order
+  
+  createdAt DateTime @default(now())
+  
+  @@index([orderId])
+  @@index([productId])
+}
+
+// Address Model - User delivery addresses
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  
+  isDefault Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+}
+
+// Review Model - Product reviews
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  rating    Int      // 1-5 stars
+  comment   String   @db.Text
+  
+  createdAt DateTime @default(now())
+  
+  @@index([productId])
+}
+
+// Promotion Model - Manage promotions and discounts
+model Promotion {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  description String
+  
+  discountType String  // 'percentage', 'fixed'
+  discountValue Float
+  
+  minOrderValue Float?
+  maxUsage      Int?
+  usageCount    Int    @default(0)
+  
+  startDate   DateTime
+  endDate     DateTime
+  
+  isActive    Boolean @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Enums
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}

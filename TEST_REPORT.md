@@ -148,7 +148,7 @@
 ### 7. ✓ Configuration Verification
 
 **Environment Variables**:
-- ✓ FIGMA_TOKEN: figd_DU3QLXbNKqxu_v2azgGgWD4QNskLQ5OSUOksuE13
+- ✓ FIGMA_TOKEN: <your-figma-token>
 - ✓ FIGMA_FILE_ID: Xyl5Or2EWoXqfBXgPrykCq
 - ✓ NODE_ENV: development
 - ✓ PORT: 3000

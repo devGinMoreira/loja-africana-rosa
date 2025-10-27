@@ -51,7 +51,7 @@ Create `.env.local` file in project root (already configured):
 
 ```env
 # Figma Configuration
-FIGMA_TOKEN=figd_DU3QLXbNKqxu_v2azgGgWD4QNskLQ5OSUOksuE13
+FIGMA_TOKEN=<your-figma-token>
 FIGMA_FILE_ID=Xyl5Or2EWoXqfBXgPrykCq
 FIGMA_PAGE_NAMES=Design System,Components,Mobile Screens
 FIGMA_INCLUDE_FONTS=true
@@ -133,7 +133,7 @@ In Railway project dashboard:
 1. **Create environment variables:**
    - `NODE_ENV=production`
    - `PORT=3000`
-   - `FIGMA_TOKEN=figd_DU3QLXbNKqxu_v2azgGgWD4QNskLQ5OSUOksuE13`
+   - `FIGMA_TOKEN=<your-figma-token>`
    - `FIGMA_FILE_ID=Xyl5Or2EWoXqfBXgPrykCq`
 
 2. **Configure build settings:**
@@ -190,7 +190,7 @@ NODE_ENV=production
 PORT=3000
 
 # Figma Integration
-FIGMA_TOKEN=figd_DU3QLXbNKqxu_v2azgGgWD4QNskLQ5OSUOksuE13
+FIGMA_TOKEN=<your-figma-token>
 FIGMA_FILE_ID=Xyl5Or2EWoXqfBXgPrykCq
 
 # Optional: Database (if needed)
