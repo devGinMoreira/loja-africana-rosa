@@ -1,0 +1,537 @@
+{
+  "version": "1.0",
+  "name": "Loja Africana Rosa Design System",
+  "colorTokens": [
+    {
+      "name": "Primary",
+      "hex": "#B93B8F",
+      "rgb": "185, 59, 143",
+      "usage": "Main CTAs, highlights, badges"
+    },
+    {
+      "name": "Primary Dark",
+      "hex": "#8B2D6B",
+      "rgb": "139, 45, 107",
+      "usage": "Hover states, active states"
+    },
+    {
+      "name": "Secondary",
+      "hex": "#D4AF37",
+      "rgb": "212, 175, 55",
+      "usage": "Accents, premium items"
+    },
+    {
+      "name": "Accent",
+      "hex": "#FF6B35",
+      "rgb": "255, 107, 53",
+      "usage": "Promo badges, alerts"
+    },
+    {
+      "name": "Success",
+      "hex": "#10B981",
+      "rgb": "16, 185, 129",
+      "usage": "Success messages, available"
+    },
+    {
+      "name": "Error",
+      "hex": "#EF4444",
+      "rgb": "239, 68, 68",
+      "usage": "Error states, stock-out"
+    },
+    {
+      "name": "Neutral 50",
+      "hex": "#F9FAFB",
+      "rgb": "249, 250, 251",
+      "usage": "Backgrounds, hover state"
+    },
+    {
+      "name": "Neutral 100",
+      "hex": "#F3F4F6",
+      "rgb": "243, 244, 246",
+      "usage": "Light backgrounds"
+    },
+    {
+      "name": "Neutral 200",
+      "hex": "#E5E7EB",
+      "rgb": "229, 231, 235",
+      "usage": "Borders, dividers"
+    },
+    {
+      "name": "Neutral 500",
+      "hex": "#6B7280",
+      "rgb": "107, 114, 128",
+      "usage": "Body text, secondary"
+    },
+    {
+      "name": "Neutral 900",
+      "hex": "#111827",
+      "rgb": "17, 24, 39",
+      "usage": "Primary text, headings"
+    }
+  ],
+  "typography": [
+    {
+      "name": "Heading 1",
+      "fontSize": 36,
+      "fontWeight": 700,
+      "lineHeight": 44,
+      "letterSpacing": -0.02,
+      "usage": "Page titles, hero section"
+    },
+    {
+      "name": "Heading 2",
+      "fontSize": 30,
+      "fontWeight": 700,
+      "lineHeight": 36,
+      "letterSpacing": -0.01,
+      "usage": "Section titles, category headers"
+    },
+    {
+      "name": "Heading 3",
+      "fontSize": 24,
+      "fontWeight": 600,
+      "lineHeight": 32,
+      "letterSpacing": 0,
+      "usage": "Card titles, subsections"
+    },
+    {
+      "name": "Body Large",
+      "fontSize": 16,
+      "fontWeight": 400,
+      "lineHeight": 24,
+      "letterSpacing": 0,
+      "usage": "Product descriptions, body copy"
+    },
+    {
+      "name": "Body",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "lineHeight": 20,
+      "letterSpacing": 0,
+      "usage": "Standard body text, captions"
+    },
+    {
+      "name": "Caption",
+      "fontSize": 12,
+      "fontWeight": 500,
+      "lineHeight": 16,
+      "letterSpacing": 0.02,
+      "usage": "Labels, hints, timestamps"
+    }
+  ],
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "24px",
+    "xl": "32px",
+    "2xl": "48px",
+    "3xl": "64px"
+  },
+  "shadows": [
+    {
+      "name": "Subtle",
+      "x": 0,
+      "y": 1,
+      "blur": 2,
+      "spread": 0,
+      "color": "rgba(0,0,0,0.05)"
+    },
+    {
+      "name": "Card",
+      "x": 0,
+      "y": 4,
+      "blur": 6,
+      "spread": -2,
+      "color": "rgba(0,0,0,0.07)"
+    },
+    {
+      "name": "Modal",
+      "x": 0,
+      "y": 20,
+      "blur": 25,
+      "spread": -5,
+      "color": "rgba(0,0,0,0.1)"
+    }
+  ],
+  "borderRadius": {
+    "none": "0px",
+    "sm": "4px",
+    "md": "8px",
+    "lg": "12px",
+    "full": "999px"
+  },
+  "components": [
+    {
+      "name": "Button/Primary/Medium",
+      "description": "Primary action button - medium size",
+      "dimensions": {
+        "width": 100,
+        "height": 40
+      },
+      "properties": {
+        "background": "#B93B8F",
+        "borderRadius": 8,
+        "padding": "12px 20px",
+        "textColor": "white",
+        "fontSize": 14,
+        "fontWeight": 600,
+        "borderWidth": 0
+      },
+      "states": {
+        "default": {
+          "background": "#B93B8F",
+          "shadow": "Subtle"
+        },
+        "hover": {
+          "background": "#8B2D6B",
+          "shadow": "Card"
+        },
+        "active": {
+          "background": "#6B1E51",
+          "shadow": "Card"
+        },
+        "disabled": {
+          "background": "#E5E7EB",
+          "textColor": "#9CA3AF",
+          "cursor": "not-allowed"
+        }
+      }
+    },
+    {
+      "name": "Button/Secondary/Medium",
+      "description": "Secondary action button - medium size",
+      "dimensions": {
+        "width": 100,
+        "height": 40
+      },
+      "properties": {
+        "background": "#F3F4F6",
+        "border": "1px #E5E7EB",
+        "borderRadius": 8,
+        "padding": "12px 20px",
+        "textColor": "#111827",
+        "fontSize": 14,
+        "fontWeight": 600
+      }
+    },
+    {
+      "name": "ProductCard",
+      "description": "Product display card",
+      "dimensions": {
+        "width": 180,
+        "height": 220
+      },
+      "layout": {
+        "image": {
+          "width": 180,
+          "height": 180,
+          "aspectRatio": "1:1",
+          "background": "#F3F4F6",
+          "borderRadius": 4
+        },
+        "category": {
+          "fontSize": 12,
+          "fontWeight": 500,
+          "color": "#6B7280"
+        },
+        "name": {
+          "fontSize": 14,
+          "fontWeight": 600,
+          "color": "#111827",
+          "maxLines": 2
+        },
+        "price": {
+          "fontSize": 14,
+          "fontWeight": 700,
+          "color": "#B93B8F"
+        },
+        "badge": {
+          "promo": {
+            "background": "#FF6B35",
+            "color": "white",
+            "fontSize": 12,
+            "fontWeight": 600
+          },
+          "topSeller": {
+            "background": "#B93B8F",
+            "color": "white",
+            "text": "TOP"
+          }
+        }
+      },
+      "properties": {
+        "background": "white",
+        "border": "1px #E5E7EB",
+        "borderRadius": 8,
+        "padding": 12,
+        "shadow": "Subtle"
+      }
+    },
+    {
+      "name": "Input/Text",
+      "description": "Text input field",
+      "dimensions": {
+        "width": 240,
+        "height": 40
+      },
+      "properties": {
+        "background": "#F9FAFB",
+        "border": "1px #E5E7EB",
+        "borderRadius": 4,
+        "padding": "12px",
+        "fontSize": 14,
+        "fontFamily": "inherit"
+      },
+      "states": {
+        "default": {
+          "background": "#F9FAFB",
+          "border": "1px #E5E7EB"
+        },
+        "focus": {
+          "background": "white",
+          "border": "1px #B93B8F",
+          "shadow": "0 0 0 3px rgba(185, 59, 143, 0.1)"
+        },
+        "error": {
+          "border": "1px #EF4444"
+        },
+        "disabled": {
+          "background": "#F3F4F6",
+          "color": "#9CA3AF",
+          "cursor": "not-allowed"
+        }
+      }
+    }
+  ],
+  "screens": [
+    {
+      "name": "Home",
+      "type": "mobile",
+      "dimensions": {
+        "width": 360,
+        "height": 1200
+      },
+      "sections": [
+        {
+          "name": "Header",
+          "height": 50,
+          "background": "#B93B8F",
+          "content": "Logo + Navigation"
+        },
+        {
+          "name": "Search",
+          "height": 60,
+          "content": "Search bar with Input/Text component"
+        },
+        {
+          "name": "Hero Banner",
+          "height": 200,
+          "background": "Featured image or gradient"
+        },
+        {
+          "name": "Top Vendas",
+          "height": 300,
+          "content": "4 ProductCard components in 2x2 grid"
+        },
+        {
+          "name": "Categories",
+          "height": 200,
+          "content": "5 category boxes in grid"
+        },
+        {
+          "name": "Promotions",
+          "height": 300,
+          "content": "4 ProductCard components with promo badges"
+        },
+        {
+          "name": "Footer",
+          "height": 100,
+          "content": "Contact, links, social"
+        }
+      ]
+    },
+    {
+      "name": "Product Catalog",
+      "type": "mobile",
+      "dimensions": {
+        "width": 360,
+        "height": 1000
+      },
+      "sections": [
+        {
+          "name": "Header",
+          "height": 50
+        },
+        {
+          "name": "Search + Filter",
+          "height": 60,
+          "content": "Search bar + Filter button"
+        },
+        {
+          "name": "Results",
+          "height": 800,
+          "content": "ProductCard grid (2 columns) with pagination"
+        }
+      ]
+    },
+    {
+      "name": "Product Detail",
+      "type": "mobile",
+      "dimensions": {
+        "width": 360,
+        "height": 1000
+      },
+      "sections": [
+        {
+          "name": "Header",
+          "height": 50,
+          "content": "Back button + Share icon"
+        },
+        {
+          "name": "Image",
+          "height": 360,
+          "content": "Large product image 1:1"
+        },
+        {
+          "name": "Details",
+          "height": 400,
+          "content": "Category, name, rating, price, description"
+        },
+        {
+          "name": "CTA",
+          "height": 60,
+          "content": "Sticky Add to Cart button"
+        }
+      ]
+    },
+    {
+      "name": "Shopping Cart",
+      "type": "mobile",
+      "dimensions": {
+        "width": 360,
+        "height": 800
+      },
+      "sections": [
+        {
+          "name": "Header",
+          "height": 50
+        },
+        {
+          "name": "Items",
+          "height": 400,
+          "content": "Cart item rows with quantity controls"
+        },
+        {
+          "name": "Summary",
+          "height": 150,
+          "content": "Subtotal, delivery fee, total"
+        },
+        {
+          "name": "CTA",
+          "height": 60,
+          "content": "Checkout button"
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "type": "mobile",
+      "dimensions": {
+        "width": 360,
+        "height": 1100
+      },
+      "sections": [
+        {
+          "name": "Header",
+          "height": 50
+        },
+        {
+          "name": "Address Form",
+          "height": 250,
+          "content": "Form fields using Input/Text component"
+        },
+        {
+          "name": "Delivery Options",
+          "height": 150,
+          "content": "Radio buttons for delivery methods"
+        },
+        {
+          "name": "Payment Options",
+          "height": 150,
+          "content": "Radio buttons for payment methods"
+        },
+        {
+          "name": "Summary",
+          "height": 200,
+          "content": "Order summary with total"
+        },
+        {
+          "name": "CTA",
+          "height": 60,
+          "content": "Place Order button"
+        }
+      ]
+    },
+    {
+      "name": "Admin Dashboard",
+      "type": "desktop",
+      "dimensions": {
+        "width": 1024,
+        "height": 768
+      },
+      "sections": [
+        {
+          "name": "Sidebar",
+          "width": 200,
+          "content": "Navigation menu"
+        },
+        {
+          "name": "Header",
+          "content": "Dashboard title + user menu"
+        },
+        {
+          "name": "KPI Cards",
+          "content": "Orders, Revenue, Visitors metrics"
+        },
+        {
+          "name": "Orders Table",
+          "content": "Recent orders with sortable columns"
+        }
+      ]
+    }
+  ],
+  "designTokensExport": {
+    "css": {
+      "colors": "Available as CSS variables",
+      "spacing": "Available as CSS variables",
+      "typography": "Available as font size/weight variables"
+    },
+    "tailwind": {
+      "extend": {
+        "colors": {
+          "primary": "#B93B8F",
+          "primary-dark": "#8B2D6B",
+          "secondary": "#D4AF37",
+          "accent": "#FF6B35",
+          "success": "#10B981",
+          "error": "#EF4444"
+        },
+        "spacing": {
+          "xs": "4px",
+          "sm": "8px",
+          "md": "16px",
+          "lg": "24px",
+          "xl": "32px"
+        }
+      }
+    }
+  },
+  "implementationNotes": {
+    "colorSystem": "All colors use CSS variables for easy theming",
+    "typography": "Inter font family or system fonts",
+    "components": "All components have variants for different states and sizes",
+    "responsiveness": "Mobile-first approach, 360px minimum width",
+    "accessibility": "WCAG AA contrast ratios maintained, sufficient touch targets (44px+)"
+  }
+}

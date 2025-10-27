@@ -1,0 +1,6 @@
+
+Loja Africana Rosa Server Started
+Port: 3000
+Environment: development
+Health check: http://localhost:3000/health
+

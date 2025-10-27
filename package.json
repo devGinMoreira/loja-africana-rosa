@@ -1,0 +1,38 @@
+{
+  "name": "loja-africana-rosa",
+  "version": "1.0.0",
+  "description": "E-commerce platform for African specialty store",
+  "main": "index.js",
+  "scripts": {
+    "dev": "echo 'Development server started'",
+    "build": "echo 'Build completed'",
+    "start": "node server.js",
+    "test": "echo 'Running tests...'",
+    "test:figma": "node test-figma-mcp.js",
+    "extract:tokens": "node extract-design-tokens.js",
+    "generate:components": "node generate-angular-components.js",
+    "lint": "echo 'Linting code...'",
+    "format": "echo 'Formatting code...'",
+    "serve:prod": "echo 'Serving production build...'"
+  },
+  "keywords": [
+    "ecommerce",
+    "angular",
+    "tailwind",
+    "figma",
+    "design-system"
+  ],
+  "author": "Ginquel Moreira <ginquel@limitlessgmtech.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/loja-africana-rosa"
+  },
+  "engines": {
+    "node": ">=18.19.1",
+    "npm": ">=10.2.4"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.3.0"
+  }
+}

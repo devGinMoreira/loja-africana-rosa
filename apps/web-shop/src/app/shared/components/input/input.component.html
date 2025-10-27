@@ -1,0 +1,17 @@
+<div class="w-full">
+  <label *ngIf="label" class="block text-sm font-medium text-neutral-900 mb-2">
+    {{ label }}
+  </label>
+  <input
+    [type]="type"
+    [value]="value"
+    [placeholder]="placeholder"
+    [disabled]="disabled"
+    [class]="getInputClasses()"
+    (change)="onInputChange($event)"
+    (blur)="onInputBlur()"
+  />
+  <p *ngIf="error && errorMessage" class="text-sm text-error mt-2">
+    {{ errorMessage }}
+  </p>
+</div>

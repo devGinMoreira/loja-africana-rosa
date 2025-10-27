@@ -1,0 +1,33 @@
+{
+  "name": "Loja Africana Rosa",
+  "description": "E-commerce platform for African specialty store",
+  "build": {
+    "builder": "nixpacks",
+    "buildCommand": "npm install && npm run build"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 5,
+    "healthCheck": {
+      "path": "/health",
+      "interval": 30,
+      "timeout": 10,
+      "restarts": 3
+    }
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": 3000
+  },
+  "volumes": [],
+  "services": [
+    {
+      "name": "web-shop",
+      "image": "node:18-alpine",
+      "port": 3000,
+      "buildCommand": "npm install && npm run build",
+      "startCommand": "npm start"
+    }
+  ]
+}
