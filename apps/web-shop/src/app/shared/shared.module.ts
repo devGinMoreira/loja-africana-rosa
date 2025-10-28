@@ -1,30 +1,24 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
-// Components
-import { ButtonComponent } from './components/button/button.component';
-import { InputComponent } from './components/input/input.component';
-
-const COMPONENTS = [
-  ButtonComponent,
-  InputComponent
-];
+import { TranslateModule } from '@ngx-translate/core';
+import { NotificationComponent } from './components/notification.component';
 
 @NgModule({
-  declarations: [
-    ...COMPONENTS
-  ],
+  declarations: [],
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    TranslateModule,
+    NotificationComponent
   ],
   exports: [
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    ...COMPONENTS
+    TranslateModule,
+    NotificationComponent
   ]
 })
-export class SharedModule { }
+export class SharedModule {}
