@@ -148,8 +148,8 @@
 ### 7. ✓ Configuration Verification
 
 **Environment Variables**:
-- ✓ FIGMA_TOKEN: <your-figma-token>
-- ✓ FIGMA_FILE_ID: Xyl5Or2EWoXqfBXgPrykCq
+- ✓ FIGMA_TOKEN: Configured (set in .env.local)
+- ✓ FIGMA_FILE_ID: Configured (set in .env.local)
 - ✓ NODE_ENV: development
 - ✓ PORT: 3000
 - ✓ DESIGN_SYSTEM_PATH: ./docs/design/figma-design-system.json

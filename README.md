@@ -193,10 +193,10 @@ npm test             # Run tests
 
 ## 🔐 Environment Variables
 
-Required:
+Required (set your own tokens in `.env.local`):
 ```env
 FIGMA_TOKEN=<your-figma-token>
-FIGMA_FILE_ID=Xyl5Or2EWoXqfBXgPrykCq
+FIGMA_FILE_ID=<your-figma-file-id>
 NODE_ENV=production
 PORT=3000
 ```

@@ -50,9 +50,9 @@ This will install all project dependencies including:
 Create `.env.local` file in project root (already configured):
 
 ```env
-# Figma Configuration
-FIGMA_TOKEN=<your-figma-token>
-FIGMA_FILE_ID=Xyl5Or2EWoXqfBXgPrykCq
+# Figma Configuration (set your own tokens in .env.local)
+FIGMA_TOKEN=your_figma_token_here
+FIGMA_FILE_ID=your_figma_file_id_here
 FIGMA_PAGE_NAMES=Design System,Components,Mobile Screens
 FIGMA_INCLUDE_FONTS=true
 FIGMA_INCLUDE_IMAGES=true
@@ -134,7 +134,7 @@ In Railway project dashboard:
    - `NODE_ENV=production`
    - `PORT=3000`
    - `FIGMA_TOKEN=<your-figma-token>`
-   - `FIGMA_FILE_ID=Xyl5Or2EWoXqfBXgPrykCq`
+   - `FIGMA_FILE_ID=<your-figma-file-id>`
 
 2. **Configure build settings:**
    - Build command: `npm run build`
@@ -189,9 +189,9 @@ Railway dashboard shows:
 NODE_ENV=production
 PORT=3000
 
-# Figma Integration
+# Figma Integration (set your own tokens)
 FIGMA_TOKEN=<your-figma-token>
-FIGMA_FILE_ID=Xyl5Or2EWoXqfBXgPrykCq
+FIGMA_FILE_ID=<your-figma-file-id>
 
 # Optional: Database (if needed)
 DATABASE_URL=
