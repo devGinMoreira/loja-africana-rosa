@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Router, CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from './auth.service';
 
@@ -31,9 +31,9 @@ export class AuthGuardService {
 }
 
 export const authGuard: CanActivateFn = (route, state) => {
-  const authService = (route.injector.get as any)(AuthService);
-  const router = (route.injector.get as any)(Router);
-  
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
   if (authService.isAuthenticated()) {
     const requiredRoles = route.data['roles'] as Array<string>;
     if (requiredRoles && requiredRoles.length > 0) {

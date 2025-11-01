@@ -4,9 +4,11 @@
   "description": "E-commerce platform for African specialty store",
   "main": "index.js",
   "scripts": {
-    "dev": "echo 'Development server started'",
-    "build": "echo 'Build completed'",
+    "dev": "node build.js --watch & node server.js",
+    "build": "node build.js",
+    "build:watch": "node build.js --watch",
     "start": "node server.js",
+    "start:dev": "npm run build:watch",
     "test": "echo 'Running tests...'",
     "test:figma": "node test-figma-mcp.js",
     "extract:tokens": "node extract-design-tokens.js",
@@ -33,10 +35,28 @@
     "npm": ">=10.2.4"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "^20.3.7",
+    "@angular/cli": "^20.3.7",
+    "@angular/compiler": "^20.3.7",
+    "@angular/compiler-cli": "^20.3.7",
+    "chokidar": "^3.6.0",
     "prisma": "^6.18.0",
-    "tailwindcss": "^3.3.0"
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@angular/animations": "^20.3.7",
+    "@angular/common": "^20.3.7",
+    "@angular/core": "^20.3.7",
+    "@angular/forms": "^20.3.7",
+    "@angular/platform-browser": "^20.3.7",
+    "@angular/platform-browser-dynamic": "^20.3.7",
+    "@angular/router": "^20.3.7",
+    "@ngrx/effects": "^20.1.0",
+    "@ngrx/store": "^20.1.0",
+    "@ngrx/store-devtools": "^20.1.0",
+    "@ngx-translate/core": "^17.0.0",
+    "@ngx-translate/http-loader": "^17.0.0",
     "@prisma/client": "^6.18.0",
     "bcryptjs": "^3.0.2",
     "jsonwebtoken": "^9.0.2"

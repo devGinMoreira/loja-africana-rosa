@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loja Africana Rosa - Produtos Africanos em Almada</title>
+  <meta name="description" content="Descubra a melhor seleção de produtos africanos e especialidades de Cabo Verde, entregues em Almada com qualidade garantida.">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; }
+    .nav-active { @apply bg-pink-100 text-pink-600; }
+    .hidden { display: none !important; }
+    .visible { display: block !important; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <div id="app"></div>
+
+  <script>
+    // ============================================
+    // LOJA AFRICANA ROSA - COMPLETE SPA
+    // ============================================
+
+    const API_URL = `http://${window.location.hostname}:${window.location.port}/api`;
+
+    // STATE MANAGEMENT
+    const state = {
+      currentPage: 'home',
+      user: null,
+      cart: JSON.parse(localStorage.getItem('cart')) || [],
+      products: [],
+      filteredProducts: [],
+      selectedProduct: null,
+      orders: [],
+      filters: {
+        search: '',
+        category: '',
+        subcategory: '',
+        priceMin: 0,
+        priceMax: 500,
+        sortBy: 'relevance',
+        inStockOnly: false,
+        onPromotion: false
+      },
+      editingProduct: null,
+      allProducts: [],
+      categories: JSON.parse(localStorage.getItem('categories')) || [
+        {
+          id: 'mercearia',
+          name: 'Mercearia',
+          icon: '🛒',
+          subcategories: [
+            { id: 'cereaisgraos', name: 'Cereais e Grãos', icon: '🌾' },
+            { id: 'oleostemperos', name: 'Óleos e Temperos', icon: '🫙' },
+            { id: 'frutasvegetais', name: 'Frutas e Vegetais', icon: '🥬' }
+          ]
+        },
+        {
+          id: 'talho',
+          name: 'Talho',
+          icon: '🥩',
+          subcategories: [
+            { id: 'carnesvermelhas', name: 'Carnes Vermelhas', icon: '🍖' },
+            { id: 'aves', name: 'Aves', icon: '🍗' },
+            { id: 'embutidos', name: 'Embutidos', icon: '🥓' }
+          ]
+        },
+        {
+          id: 'peixaria',
+          name: 'Peixaria',
+          icon: '🐟',
+          subcategories: [
+            { id: 'peixefresco', name: 'Peixe Fresco', icon: '🐠' },
+            { id: 'peixeseco', name: 'Peixe Seco', icon: '🐟' },
+            { id: 'marisco', name: 'Marisco', icon: '🦐' }
+          ]
+        },
+        {
+          id: 'cosmeticos',
+          name: 'Cosméticos',
+          icon: '💄',
+          subcategories: [
+            { id: 'oleosmanteigas', name: 'Óleos e Manteigas Naturais', icon: '💅' },
+            { id: 'cremeslocoes', name: 'Cremes e Loções', icon: '🧴' },
+            { id: 'higienepessoal', name: 'Higiene Pessoal', icon: '🧼' }
+          ]
+        }
+      ]
+    };
+
+    // MOCK DATA - Initialize with localStorage or defaults
+    let mockProducts = JSON.parse(localStorage.getItem('allProducts')) || [
+      { id: '1', name: 'Arroz Africano Premium', categoryId: 'mercearia', subcategoryId: 'cereaisgraos', price: 12.99, costPrice: 9.09, originalPrice: 15.99, discount: 18, isPromotion: true, image: 'https://via.placeholder.com/300x300?text=Arroz&bg=FFD700', description: 'Arroz de alta qualidade proveniente de Moçambique', stock: 50, inStock: true, rating: 4.5, reviews: 23, isFeatured: true, ivaRate: 23 },
+      { id: '2', name: 'Peixe Fresco Salgado', categoryId: 'peixaria', subcategoryId: 'peixefresco', price: 18.50, costPrice: 12.95, image: 'https://via.placeholder.com/300x300?text=Peixe&bg=87CEEB', description: 'Peixe fresco salgado, importado diariamente', stock: 30, inStock: true, rating: 4.8, reviews: 45, isFeatured: true, ivaRate: 23 },
+      { id: '3', name: 'Carne de Cabra Premium', categoryId: 'talho', subcategoryId: 'carnesvermelhas', price: 22.99, costPrice: 16.09, originalPrice: 24.99, discount: 8, isPromotion: true, image: 'https://via.placeholder.com/300x300?text=Carne&bg=FF6347', description: 'Carne de cabra de primeira qualidade', stock: 20, inStock: true, rating: 4.7, reviews: 34, isFeatured: false, ivaRate: 23 },
+      { id: '4', name: 'Óleo de Palma Orgânico', categoryId: 'mercearia', subcategoryId: 'oleostemperos', price: 16.75, costPrice: 11.73, image: 'https://via.placeholder.com/300x300?text=Óleo&bg=FFA500', description: 'Óleo de palma orgânico, essencial na gastronomia', stock: 40, inStock: true, rating: 4.6, reviews: 28, isFeatured: true, ivaRate: 23 },
+      { id: '5', name: 'Manteiga de Karité', categoryId: 'cosmeticos', subcategoryId: 'oleosmanteigas', price: 14.99, costPrice: 10.49, originalPrice: 18.99, discount: 21, isPromotion: true, image: 'https://via.placeholder.com/300x300?text=Manteiga&bg=DEB887', description: 'Manteiga de Karité pura, 100% natural', stock: 35, inStock: true, rating: 4.9, reviews: 56, isFeatured: true, ivaRate: 23 },
+      { id: '6', name: 'Sal Tradicional Africano', categoryId: 'mercearia', subcategoryId: 'oleostemperos', price: 8.99, costPrice: 6.29, image: 'https://via.placeholder.com/300x300?text=Sal&bg=FFFFFF', description: 'Sal tradicional africano para temperos', stock: 60, inStock: true, rating: 4.4, reviews: 18, isFeatured: false, ivaRate: 23 },
+      { id: '7', name: 'Feijão Fradinho', categoryId: 'mercearia', subcategoryId: 'cereaisgraos', price: 9.99, costPrice: 6.99, image: 'https://via.placeholder.com/300x300?text=Feijão&bg=8B4513', description: 'Feijão fradinho seco de alta qualidade', stock: 45, inStock: true, rating: 4.3, reviews: 12, isFeatured: false, ivaRate: 23 },
+      { id: '8', name: 'Mandioca Fresca', categoryId: 'mercearia', subcategoryId: 'frutasvegetais', price: 7.50, costPrice: 5.25, image: 'https://via.placeholder.com/300x300?text=Mandioca&bg=D2B48C', description: 'Mandioca fresca entregue semanalmente', stock: 25, inStock: true, rating: 4.2, reviews: 8, isFeatured: false, ivaRate: 23 },
+      { id: '9', name: 'Peixe Seco', categoryId: 'peixaria', subcategoryId: 'peixeseco', price: 24.99, costPrice: 17.49, image: 'https://via.placeholder.com/300x300?text=PeixeSeco&bg=4682B4', description: 'Peixe seco tradicional para caldo', stock: 15, inStock: true, rating: 4.6, reviews: 22, isFeatured: false, ivaRate: 23 },
+      { id: '10', name: 'Creme Corporal Africano', categoryId: 'cosmeticos', subcategoryId: 'cremeslocoes', price: 12.50, costPrice: 8.75, image: 'https://via.placeholder.com/300x300?text=Creme&bg=FFB6C1', description: 'Creme corporal com ingredientes naturais', stock: 40, inStock: true, rating: 4.7, reviews: 31, isFeatured: false, ivaRate: 23 },
+      { id: '11', name: 'Sabonete Natural', categoryId: 'cosmeticos', subcategoryId: 'higienepessoal', price: 5.99, costPrice: 4.19, image: 'https://via.placeholder.com/300x300?text=Sabonete&bg=F0E68C', description: 'Sabonete feito à mão com óleos naturais', stock: 50, inStock: true, rating: 4.8, reviews: 44, isFeatured: false, ivaRate: 23 },
+      { id: '12', name: 'Azeite de Palma Premium', categoryId: 'mercearia', subcategoryId: 'oleostemperos', price: 19.99, costPrice: 13.99, image: 'https://via.placeholder.com/300x300?text=Azeite&bg=DAA520', description: 'Azeite de palma premium prensado a frio', stock: 20, inStock: true, rating: 4.9, reviews: 37, isFeatured: false, ivaRate: 23 },
+      { id: '13', name: 'Banana Prata', categoryId: 'mercearia', subcategoryId: 'frutasvegetais', price: 3.99, costPrice: 2.79, image: 'https://via.placeholder.com/300x300?text=Banana&bg=FFE135', description: 'Banana prata fresca importada', stock: 80, inStock: true, rating: 4.4, reviews: 15, isFeatured: false, ivaRate: 23 }
+    ];
+
+    // ============================================
+    // API FUNCTIONS
+    // ============================================
+
+    async function fetchProducts(filters = {}) {
+      try {
+        const params = new URLSearchParams();
+        if (filters.search) params.append('searchQuery', filters.search);
+        if (filters.category) params.append('categories', filters.category);
+        if (filters.sortBy) params.append('sortBy', filters.sortBy);
+        params.append('inStockOnly', filters.inStockOnly || false);
+        params.append('onPromotion', filters.onPromotion || false);
+        params.append('minPrice', filters.priceMin || 0);
+        params.append('maxPrice', filters.priceMax || 500);
+
+        const response = await fetch(`${API_URL}/products?${params}`);
+        if (response.ok) {
+          const data = await response.json();
+          return Array.isArray(data) ? data : (data.data || mockProducts);
+        }
+      } catch (error) {
+        console.log('Using mock products');
+      }
+      return mockProducts;
+    }
+
+    // ============================================
+    // NAVIGATION & ROUTING
+    // ============================================
+
+    function navigate(page, params = {}) {
+      state.currentPage = page;
+      state.selectedProduct = params.productId ? mockProducts.find(p => p.id === params.productId) : null;
+      render();
+      window.scrollTo(0, 0);
+    }
+
+    // ============================================
+    // CART FUNCTIONS
+    // ============================================
+
+    function addToCart(product) {
+      const existingItem = state.cart.find(item => item.id === product.id);
+      if (existingItem) {
+        existingItem.quantity++;
+      } else {
+        state.cart.push({ ...product, quantity: 1 });
+      }
+      localStorage.setItem('cart', JSON.stringify(state.cart));
+      showNotification(`${product.name} adicionado ao carrinho!`);
+      render();
+    }
+
+    function removeFromCart(productId) {
+      state.cart = state.cart.filter(item => item.id !== productId);
+      localStorage.setItem('cart', JSON.stringify(state.cart));
+      render();
+    }
+
+    function updateCartQuantity(productId, quantity) {
+      const item = state.cart.find(item => item.id === productId);
+      if (item) item.quantity = Math.max(1, quantity);
+      localStorage.setItem('cart', JSON.stringify(state.cart));
+      render();
+    }
+
+    function getCartTotal() {
+      return state.cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+    }
+
+    function calculateTotals() {
+      const subtotal = getCartTotal();
+      const tax = subtotal * 0.13; // 13% IVA
+      const deliveryFee = subtotal >= 50 ? 0 : 2.00;
+      const total = subtotal + tax + deliveryFee;
+      return { subtotal, tax, deliveryFee, total };
+    }
+
+    // ============================================
+    // UTILITY FUNCTIONS
+    // ============================================
+
+    function showNotification(message) {
+      const notif = document.createElement('div');
+      notif.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+      notif.textContent = message;
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 3000);
+    }
+
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(value);
+    }
+
+    // ============================================
+    // PAGE COMPONENTS
+    // ============================================
+
+    function Header() {
+      return `
+        <header class="bg-white shadow-sm sticky top-0 z-40">
+          <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+              <button onclick="navigate('home')" class="text-2xl font-bold text-pink-600 cursor-pointer">🌍 Loja Africana Rosa</button>
+              <div class="flex items-center gap-4">
+                <button onclick="navigate('products')" class="text-gray-700 hover:text-pink-600 transition">📦 Produtos</button>
+                <button onclick="navigate('cart')" class="relative text-gray-700 hover:text-pink-600 transition">
+                  🛒 Carrinho
+                  ${state.cart.length > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">${state.cart.length}</span>` : ''}
+                </button>
+                ${state.user ? `
+                  ${state.user.role === 'admin' ? `
+                    <button onclick="navigate('admin')" class="text-gray-700 hover:text-pink-600 transition font-semibold">⚙️ Admin</button>
+                  ` : ''}
+                  <button onclick="navigate('account')" class="text-gray-700 hover:text-pink-600 transition">👤 ${state.user.name}</button>
+                  <button onclick="logout()" class="text-gray-700 hover:text-pink-600 transition">🚪 Sair</button>
+                ` : `
+                  <button onclick="navigate('login')" class="text-gray-700 hover:text-pink-600 transition">🔐 Login</button>
+                `}
+              </div>
+            </div>
+          </div>
+        </header>
+      `;
+    }
+
+    function HomePage() {
+      return `
+        <section class="bg-gradient-to-r from-pink-500 to-purple-600 text-white py-20 px-4">
+          <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-5xl font-bold mb-4">Bem-vindo à Loja Africana Rosa</h1>
+            <p class="text-xl mb-8 opacity-90">Descubra a melhor seleção de produtos africanos e especialidades de Cabo Verde</p>
+            <button onclick="navigate('products')" class="bg-white text-pink-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+              🛍️ Explorar Produtos
+            </button>
+          </div>
+        </section>
+        <section class="max-w-7xl mx-auto py-16 px-4">
+          <h2 class="text-3xl font-bold mb-8">Produtos em Destaque</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            ${mockProducts
+              .filter(p => p.inStock)
+              .sort((a, b) => (b.reviews || 0) - (a.reviews || 0))
+              .slice(0, 10)
+              .map(product => ProductCard(product))
+              .join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    function ProductsPage() {
+      // Apply filters to products
+      let filteredProducts = mockProducts.filter(p => {
+        let matches = true;
+
+        // Search filter
+        if (state.filters.search) {
+          matches = matches && p.name.toLowerCase().includes(state.filters.search.toLowerCase());
+        }
+
+        // Category filter
+        if (state.filters.category) {
+          matches = matches && p.categoryId === state.filters.category;
+        }
+
+        // Subcategory filter
+        if (state.filters.subcategory) {
+          matches = matches && p.subcategoryId === state.filters.subcategory;
+        }
+
+        // Price range filter
+        if (state.filters.priceMin) {
+          matches = matches && p.price >= state.filters.priceMin;
+        }
+        if (state.filters.priceMax) {
+          matches = matches && p.price <= state.filters.priceMax;
+        }
+
+        // Stock filter
+        if (state.filters.inStockOnly) {
+          matches = matches && p.inStock;
+        }
+
+        // Promotion filter
+        if (state.filters.onPromotion) {
+          matches = matches && p.isPromotion;
+        }
+
+        return matches;
+      });
+
+      // Sort products
+      if (state.filters.sortBy === 'price-asc') {
+        filteredProducts.sort((a, b) => a.price - b.price);
+      } else if (state.filters.sortBy === 'price-desc') {
+        filteredProducts.sort((a, b) => b.price - a.price);
+      } else if (state.filters.sortBy === 'rating') {
+        filteredProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      }
+
+      // Get category counts
+      const categoryCounts = {};
+      state.categories.forEach(cat => {
+        categoryCounts[cat.id] = mockProducts.filter(p => p.categoryId === cat.id).length;
+      });
+
+      return `
+        <div class="max-w-7xl mx-auto px-4 py-8">
+          <h1 class="text-3xl font-bold mb-8">Catálogo de Produtos</h1>
+
+          <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Filters -->
+            <div class="bg-white p-6 rounded-lg shadow h-fit sticky top-20">
+              <h3 class="font-bold text-lg mb-4">Filtros</h3>
+
+              <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2">Pesquisar</label>
+                <input type="text" placeholder="Buscar produto..." class="w-full px-3 py-2 border rounded-lg"
+                  value="${state.filters.search}" oninput="state.filters.search = this.value; applyFilters()">
+              </div>
+
+              <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2">Categoria</label>
+                <select class="w-full px-3 py-2 border rounded-lg" onchange="state.filters.category = this.value; state.filters.subcategory = ''; applyFilters()" value="${state.filters.category}">
+                  <option value="">Todas (${mockProducts.length})</option>
+                  ${state.categories.map(cat => `
+                    <option value="${cat.id}" ${state.filters.category === cat.id ? 'selected' : ''}>
+                      ${cat.icon} ${cat.name} (${categoryCounts[cat.id] || 0})
+                    </option>
+                  `).join('')}
+                </select>
+              </div>
+
+              ${state.filters.category ? `
+                <div class="mb-6">
+                  <label class="block text-sm font-semibold mb-2">Subcategoria</label>
+                  <select class="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:border-pink-600 focus:outline-none transition bg-white hover:border-gray-300 cursor-pointer" onchange="state.filters.subcategory = this.value; applyFilters()">
+                    <option value="" style="padding: 8px;">— Todas as Subcategorias</option>
+                    ${(() => {
+                      const selectedCategory = state.categories.find(c => c.id === state.filters.category);
+                      if (selectedCategory && selectedCategory.subcategories) {
+                        return selectedCategory.subcategories.map(subcat => {
+                          const subCount = mockProducts.filter(p => p.subcategoryId === subcat.id).length;
+                          return `<option value="${subcat.id}" ${state.filters.subcategory === subcat.id ? 'selected' : ''} style="padding: 8px;">
+                            ${subcat.icon} ${subcat.name} (${subCount})
+                          </option>`;
+                        }).join('');
+                      }
+                      return '';
+                    })()}
+                  </select>
+                </div>
+              ` : ''}
+
+              <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2">Faixa de Preço</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <input type="number" placeholder="Min" class="px-3 py-2 border rounded-lg"
+                    value="${state.filters.priceMin || ''}" oninput="state.filters.priceMin = parseFloat(this.value) || 0; applyFilters()">
+                  <input type="number" placeholder="Max" class="px-3 py-2 border rounded-lg"
+                    value="${state.filters.priceMax || ''}" oninput="state.filters.priceMax = parseFloat(this.value) || 500; applyFilters()">
+                </div>
+              </div>
+
+              <div class="mb-6">
+                <label class="block text-sm font-semibold mb-2">Ordenar por</label>
+                <select class="w-full px-3 py-2 border rounded-lg" onchange="state.filters.sortBy = this.value; applyFilters()">
+                  <option value="relevance" ${state.filters.sortBy === 'relevance' ? 'selected' : ''}>Relevância</option>
+                  <option value="price-asc" ${state.filters.sortBy === 'price-asc' ? 'selected' : ''}>Preço: Menor para Maior</option>
+                  <option value="price-desc" ${state.filters.sortBy === 'price-desc' ? 'selected' : ''}>Preço: Maior para Menor</option>
+                  <option value="rating" ${state.filters.sortBy === 'rating' ? 'selected' : ''}>Melhor Avaliação</option>
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label class="flex items-center">
+                  <input type="checkbox" ${state.filters.inStockOnly ? 'checked' : ''} onchange="state.filters.inStockOnly = this.checked; applyFilters()">
+                  <span class="ml-2 text-sm">Apenas em Stock</span>
+                </label>
+              </div>
+
+              <div>
+                <label class="flex items-center">
+                  <input type="checkbox" ${state.filters.onPromotion ? 'checked' : ''} onchange="state.filters.onPromotion = this.checked; applyFilters()">
+                  <span class="ml-2 text-sm">Apenas Promoções</span>
+                </label>
+              </div>
+
+              <button onclick="resetFilters()" class="w-full mt-6 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition text-sm font-semibold">
+                🔄 Limpar Filtros
+              </button>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="lg:col-span-3">
+              <div class="mb-4">
+                <p class="text-gray-600">${filteredProducts.length} produtos encontrados</p>
+              </div>
+
+              ${filteredProducts.length === 0 ? `
+                <div class="text-center py-12">
+                  <p class="text-gray-500 text-lg">Nenhum produto encontrado com os filtros selecionados</p>
+                  <button onclick="resetFilters()" class="mt-4 bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition font-semibold">
+                    Limpar Filtros
+                  </button>
+                </div>
+              ` : `
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  ${filteredProducts.map(product => ProductCard(product)).join('')}
+                </div>
+              `}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function resetFilters() {
+      state.filters = {
+        search: '',
+        category: '',
+        subcategory: '',
+        priceMin: 0,
+        priceMax: 500,
+        sortBy: 'relevance',
+        inStockOnly: false,
+        onPromotion: false
+      };
+      render();
+    }
+
+    function ProductCard(product) {
+      const category = state.categories.find(c => c.id === product.categoryId);
+      const subcategory = category && category.subcategories ? category.subcategories.find(s => s.id === product.subcategoryId) : null;
+      const categoryLabel = category ? (subcategory ? `${category.icon} ${category.name} > ${subcategory.icon} ${subcategory.name}` : `${category.icon} ${category.name}`) : '';
+      return `
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition overflow-hidden cursor-pointer flex flex-col" onclick="navigate('product', { productId: '${product.id}' })">
+          <div class="relative h-48 bg-gray-200 overflow-hidden">
+            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover hover:scale-110 transition duration-300">
+            ${product.isPromotion ? `<span class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">-${product.discount}%</span>` : ''}
+            ${categoryLabel ? `<span class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold">${categoryLabel}</span>` : ''}
+            ${!product.inStock ? `<span class="absolute bottom-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-semibold">Fora de Stock</span>` : ''}
+          </div>
+          <div class="p-4 flex flex-col flex-1">
+            <h3 class="font-bold text-lg text-gray-900 mb-2">${product.name}</h3>
+            <p class="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">${product.description}</p>
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <span class="text-2xl font-bold text-pink-600">${formatCurrency(product.price)}</span>
+                ${product.originalPrice ? `<span class="text-gray-400 line-through ml-2">${formatCurrency(product.originalPrice)}</span>` : ''}
+              </div>
+              ${product.rating ? `<span class="text-yellow-400">⭐ ${product.rating}</span>` : ''}
+            </div>
+            <button class="w-full bg-pink-600 text-white py-2 rounded-lg hover:bg-pink-700 transition font-semibold ${!product.inStock ? 'opacity-50 cursor-not-allowed' : ''}"
+              onclick="event.stopPropagation(); ${product.inStock ? `addToCart({id: '${product.id}', name: '${product.name}', price: ${product.price}, image: '${product.image}'})` : 'return false'}"
+              ${!product.inStock ? 'disabled' : ''}>
+              ${product.inStock ? '🛒 Adicionar' : '❌ Indisponível'}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function ProductDetailPage() {
+      if (!state.selectedProduct) return '<div class="text-center py-12">Produto não encontrado</div>';
+      const p = state.selectedProduct;
+      return `
+        <div class="max-w-7xl mx-auto px-4 py-8">
+          <button onclick="navigate('products')" class="text-pink-600 hover:underline mb-6">← Voltar aos Produtos</button>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="relative h-96 bg-gray-200 rounded-lg overflow-hidden flex items-center justify-center">
+              <img src="${p.image}" alt="${p.name}" class="max-w-full max-h-full object-contain">
+              ${p.isPromotion ? `<span class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">-${p.discount}%</span>` : ''}
+            </div>
+
+            <div>
+              <h1 class="text-4xl font-bold mb-2">${p.name}</h1>
+              <div class="flex items-center gap-4 mb-6">
+                <span class="text-3xl font-bold text-pink-600">${formatCurrency(p.price)}</span>
+                ${p.originalPrice ? `<span class="text-gray-400 line-through text-xl">${formatCurrency(p.originalPrice)}</span>` : ''}
+                ${p.rating ? `<span class="text-yellow-400 text-lg">⭐ ${p.rating} (${p.reviews} reviews)</span>` : ''}
+              </div>
+
+              <div class="mb-6">
+                <p class="text-gray-700 text-lg mb-4">${p.description}</p>
+                <p class="text-gray-600"><strong>Stock:</strong> ${p.stock} unidades</p>
+                <p class="text-gray-600"><strong>Status:</strong> ${p.inStock ? '<span class="text-green-600">✓ Em Stock</span>' : '<span class="text-red-600">✗ Fora de Stock</span>'}</p>
+                <p class="text-gray-600"><strong>IVA:</strong> ${p.ivaRate}%</p>
+              </div>
+
+              <button onclick="addToCart({id: '${p.id}', name: '${p.name}', price: ${p.price}, image: '${p.image}'}); navigate('cart')" class="w-full bg-pink-600 text-white py-4 rounded-lg hover:bg-pink-700 transition font-bold text-lg">
+                🛒 Adicionar ao Carrinho
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function CartPage() {
+      if (state.cart.length === 0) {
+        return `
+          <div class="max-w-7xl mx-auto px-4 py-12 text-center">
+            <h1 class="text-3xl font-bold mb-4">Seu Carrinho está Vazio</h1>
+            <p class="text-gray-600 mb-8">Comece a adicionar produtos ao carrinho</p>
+            <button onclick="navigate('products')" class="bg-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-pink-700">
+              Continuar Comprando
+            </button>
+          </div>
+        `;
+      }
+
+      const totals = calculateTotals();
+      return `
+        <div class="max-w-7xl mx-auto px-4 py-8">
+          <h1 class="text-3xl font-bold mb-8">Carrinho de Compras</h1>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+              <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="w-full">
+                  <thead class="bg-gray-100">
+                    <tr>
+                      <th class="px-6 py-3 text-left font-semibold">Produto</th>
+                      <th class="px-6 py-3 text-left font-semibold">Preço</th>
+                      <th class="px-6 py-3 text-left font-semibold">Qtd</th>
+                      <th class="px-6 py-3 text-left font-semibold">Subtotal</th>
+                      <th class="px-6 py-3 text-left font-semibold">Ação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${state.cart.map(item => `
+                      <tr class="border-b">
+                        <td class="px-6 py-4">${item.name}</td>
+                        <td class="px-6 py-4">${formatCurrency(item.price)}</td>
+                        <td class="px-6 py-4">
+                          <input type="number" min="1" value="${item.quantity}" class="w-12 px-2 py-1 border rounded"
+                            onchange="updateCartQuantity('${item.id}', parseInt(this.value))">
+                        </td>
+                        <td class="px-6 py-4">${formatCurrency(item.price * item.quantity)}</td>
+                        <td class="px-6 py-4">
+                          <button onclick="removeFromCart('${item.id}')" class="text-red-600 hover:underline">Remover</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6 h-fit">
+              <h3 class="font-bold text-lg mb-4">Resumo da Encomenda</h3>
+              <div class="space-y-2 mb-4 pb-4 border-b">
+                <div class="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span class="font-semibold">${formatCurrency(totals.subtotal)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>IVA (13%):</span>
+                  <span class="font-semibold">${formatCurrency(totals.tax)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Entrega:</span>
+                  <span class="font-semibold">${totals.deliveryFee === 0 ? 'Grátis ✓' : formatCurrency(totals.deliveryFee)}</span>
+                </div>
+              </div>
+              <div class="flex justify-between text-xl font-bold mb-6">
+                <span>Total:</span>
+                <span class="text-pink-600">${formatCurrency(totals.total)}</span>
+              </div>
+              <button onclick="navigate('checkout')" class="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700 transition font-semibold">
+                Prosseguir para Compra
+              </button>
+              <button onclick="navigate('products')" class="w-full mt-3 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition font-semibold">
+                Continuar Comprando
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function CheckoutPage() {
+      if (state.cart.length === 0) {
+        return '<div class="max-w-7xl mx-auto px-4 py-12 text-center"><p>Carrinho vazio</p></div>';
+      }
+
+      const totals = calculateTotals();
+      return `
+        <div class="max-w-4xl mx-auto px-4 py-8">
+          <h1 class="text-3xl font-bold mb-8">Finalizar Compra</h1>
+
+          <div class="bg-white rounded-lg shadow p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Endereço de Entrega</h2>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <input type="text" placeholder="Rua" class="px-4 py-2 border rounded-lg col-span-2" id="street">
+              <input type="text" placeholder="Número" class="px-4 py-2 border rounded-lg">
+              <input type="text" placeholder="Código Postal" class="px-4 py-2 border rounded-lg">
+              <input type="text" placeholder="Cidade" class="px-4 py-2 border rounded-lg">
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Método de Entrega</h2>
+            <label class="flex items-center mb-4">
+              <input type="radio" name="delivery" value="standard" checked>
+              <span class="ml-3">Entrega Padrão (3-5 dias) - €2.00</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="delivery" value="express">
+              <span class="ml-3">Entrega Expressa (1-2 dias) - €5.99</span>
+            </label>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Método de Pagamento</h2>
+            <label class="flex items-center mb-4">
+              <input type="radio" name="payment" value="card" checked>
+              <span class="ml-3">Cartão de Crédito</span>
+            </label>
+            <label class="flex items-center mb-4">
+              <input type="radio" name="payment" value="bank">
+              <span class="ml-3">Transferência Bancária</span>
+            </label>
+            <label class="flex items-center">
+              <input type="radio" name="payment" value="paypal">
+              <span class="ml-3">PayPal</span>
+            </label>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Resumo da Encomenda</h2>
+            <div class="space-y-2 mb-6 pb-6 border-b">
+              <div class="flex justify-between">
+                <span>Subtotal:</span>
+                <span>${formatCurrency(totals.subtotal)}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>IVA (13%):</span>
+                <span>${formatCurrency(totals.tax)}</span>
+              </div>
+              <div class="flex justify-between">
+                <span>Entrega:</span>
+                <span>${totals.deliveryFee === 0 ? 'Grátis ✓' : formatCurrency(totals.deliveryFee)}</span>
+              </div>
+              <div class="flex justify-between text-xl font-bold text-pink-600">
+                <span>Total:</span>
+                <span>${formatCurrency(totals.total)}</span>
+              </div>
+            </div>
+
+            <button onclick="completeOrder()" class="w-full bg-pink-600 text-white py-4 rounded-lg hover:bg-pink-700 transition font-bold text-lg mb-3">
+              ✓ Confirmar Encomenda
+            </button>
+            <button onclick="navigate('cart')" class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition font-semibold">
+              Voltar
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function LoginPage() {
+      return `
+        <div class="max-w-md mx-auto px-4 py-12">
+          <div class="bg-white rounded-lg shadow p-8">
+            <h1 class="text-3xl font-bold mb-8 text-center">Login</h1>
+
+            <div class="mb-6">
+              <label class="block text-sm font-semibold mb-2">Email</label>
+              <input type="email" placeholder="seu@email.com" class="w-full px-4 py-2 border rounded-lg" id="loginEmail">
+            </div>
+
+            <div class="mb-6">
+              <label class="block text-sm font-semibold mb-2">Senha</label>
+              <input type="password" placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg" id="loginPassword">
+            </div>
+
+            <button onclick="doLogin()" class="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700 transition font-semibold mb-4">
+              🔐 Entrar
+            </button>
+
+            <p class="text-center text-gray-600 mb-4">ou</p>
+
+            <button onclick="navigate('register')" class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition font-semibold">
+              Criar Conta
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function RegisterPage() {
+      return `
+        <div class="max-w-md mx-auto px-4 py-12">
+          <div class="bg-white rounded-lg shadow p-8">
+            <h1 class="text-3xl font-bold mb-8 text-center">Criar Conta</h1>
+
+            <div class="mb-4">
+              <label class="block text-sm font-semibold mb-2">Nome</label>
+              <input type="text" placeholder="Seu Nome" class="w-full px-4 py-2 border rounded-lg" id="regName">
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-semibold mb-2">Email</label>
+              <input type="email" placeholder="seu@email.com" class="w-full px-4 py-2 border rounded-lg" id="regEmail">
+            </div>
+
+            <div class="mb-6">
+              <label class="block text-sm font-semibold mb-2">Senha</label>
+              <input type="password" placeholder="••••••••" class="w-full px-4 py-2 border rounded-lg" id="regPassword">
+            </div>
+
+            <button onclick="doRegister()" class="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700 transition font-semibold mb-4">
+              ✓ Registrar
+            </button>
+
+            <p class="text-center text-gray-600 mb-4">Já tem conta?</p>
+
+            <button onclick="navigate('login')" class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 transition font-semibold">
+              Entrar
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function AccountPage() {
+      if (!state.user) return `<div class="text-center py-12"><p>Faça login para ver sua conta</p></div>`;
+
+      return `
+        <div class="max-w-4xl mx-auto px-4 py-8">
+          <h1 class="text-3xl font-bold mb-8">Minha Conta</h1>
+
+          <div class="bg-white rounded-lg shadow p-8 mb-8">
+            <h2 class="text-2xl font-bold mb-6">Informações Pessoais</h2>
+            <p class="mb-2"><strong>Nome:</strong> ${state.user.name}</p>
+            <p><strong>Email:</strong> ${state.user.email}</p>
+          </div>
+
+          <div class="bg-white rounded-lg shadow p-8">
+            <h2 class="text-2xl font-bold mb-6">Minhas Encomendas</h2>
+            ${state.orders.length === 0 ? '<p class="text-gray-600">Nenhuma encomenda realizada ainda</p>' : `
+              <div class="space-y-4">
+                ${state.orders.map((order, i) => `
+                  <div class="border-l-4 border-pink-600 pl-4 py-2">
+                    <p><strong>Encomenda #${i + 1}</strong> - ${new Date(order.date).toLocaleDateString('pt-PT')}</p>
+                    <p class="text-gray-600">Total: ${formatCurrency(order.total)}</p>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    function Footer() {
+      return `
+        <footer class="bg-gray-900 text-gray-300 py-12 px-4 mt-12">
+          <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <h4 class="text-white font-bold mb-4">Sobre Nós</h4>
+              <p class="text-sm">Loja de produtos africanos e especialidades de Cabo Verde em Almada</p>
+            </div>
+            <div>
+              <h4 class="text-white font-bold mb-4">Contacto</h4>
+              <p class="text-sm">📍 Almada, Portugal</p>
+              <p class="text-sm">📧 info@lojaafricanarosa.pt</p>
+            </div>
+            <div>
+              <h4 class="text-white font-bold mb-4">Rápidos</h4>
+              <ul class="text-sm space-y-2">
+                <li><button onclick="navigate('products')" class="hover:text-white">Produtos</button></li>
+                <li><button onclick="navigate('cart')" class="hover:text-white">Carrinho</button></li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="text-white font-bold mb-4">Legal</h4>
+              <ul class="text-sm space-y-2">
+                <li><a href="#" class="hover:text-white">Privacidade</a></li>
+                <li><a href="#" class="hover:text-white">Termos</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="border-t border-gray-800 pt-8 text-center text-sm">
+            <p>© 2025 Loja Africana Rosa. Todos os direitos reservados.</p>
+            <p class="mt-2 text-xs">Desenvolvido por Ginquel Moreira - Limitless GMTech Solutions, Lda</p>
+          </div>
+        </footer>
+      `;
+    }
+
+    // ============================================
+    // AUTH FUNCTIONS
+    // ============================================
+
+    function doLogin() {
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+
+      if (!email || !password) {
+        showNotification('Por favor preencha todos os campos');
+        return;
+      }
+
+      // Demo admin account
+      if (email === 'admin@lojaafricanarosa.pt' && password === 'admin123') {
+        state.user = { name: 'Administrador', email, role: 'admin' };
+        localStorage.setItem('user', JSON.stringify(state.user));
+        showNotification('Login administrador realizado!');
+        navigate('home');
+        return;
+      }
+
+      // Regular user login
+      state.user = { name: email.split('@')[0], email, role: 'user' };
+      localStorage.setItem('user', JSON.stringify(state.user));
+      showNotification('Login realizado com sucesso!');
+      navigate('home');
+    }
+
+    function doRegister() {
+      const name = document.getElementById('regName').value;
+      const email = document.getElementById('regEmail').value;
+      const password = document.getElementById('regPassword').value;
+
+      if (!name || !email || !password) {
+        showNotification('Por favor preencha todos os campos');
+        return;
+      }
+
+      state.user = { name, email, role: 'user' };
+      localStorage.setItem('user', JSON.stringify(state.user));
+      showNotification('Conta criada com sucesso!');
+      navigate('home');
+    }
+
+    function logout() {
+      state.user = null;
+      localStorage.removeItem('user');
+      showNotification('Logout realizado');
+      navigate('home');
+    }
+
+    function completeOrder() {
+      const address = document.getElementById('street').value;
+      if (!address) {
+        showNotification('Por favor preencha o endereço');
+        return;
+      }
+
+      const order = {
+        id: Date.now(),
+        date: new Date(),
+        items: state.cart,
+        total: calculateTotals().total
+      };
+
+      state.orders.push(order);
+      state.cart = [];
+      localStorage.setItem('cart', JSON.stringify([]));
+      localStorage.setItem('orders', JSON.stringify(state.orders));
+
+      showNotification('Encomenda realizada com sucesso!');
+      navigate('home');
+    }
+
+    function applyFilters() {
+      // In a real app, this would filter the products
+      render();
+    }
+
+    // ============================================
+    // ADMIN PAGE COMPONENTS
+    // ============================================
+
+    function AdminDashboardPage() {
+      if (!state.user || state.user.role !== 'admin') {
+        navigate('home');
+        return '<div class="text-center py-12"><p>Acesso negado. Apenas administradores podem acessar.</p></div>';
+      }
+
+      return `
+        <div class="max-w-7xl mx-auto px-4 py-8">
+          <h1 class="text-3xl font-bold mb-8">📊 Painel de Administração</h1>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-gray-600 text-sm font-semibold mb-2">Total de Produtos</h3>
+              <p class="text-3xl font-bold text-pink-600">${mockProducts.length}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-gray-600 text-sm font-semibold mb-2">Total de Encomendas</h3>
+              <p class="text-3xl font-bold text-pink-600">${state.orders.length}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-gray-600 text-sm font-semibold mb-2">Receita Total</h3>
+              <p class="text-3xl font-bold text-pink-600">${formatCurrency(state.orders.reduce((sum, order) => sum + order.total, 0))}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="text-gray-600 text-sm font-semibold mb-2">Itens no Carrinho</h3>
+              <p class="text-3xl font-bold text-pink-600">${state.cart.length}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-2xl font-bold mb-6">Ações Rápidas</h2>
+              <button onclick="navigate('productManagement')" class="w-full bg-pink-600 text-white py-3 rounded-lg hover:bg-pink-700 transition font-semibold mb-4">
+                📦 Gerenciar Produtos
+              </button>
+              <button onclick="navigate('orderManagement')" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                📋 Gerenciar Encomendas
+              </button>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-2xl font-bold mb-6">Informações</h2>
+              <p class="text-gray-600 mb-4">
+                <strong>Admin:</strong> ${state.user.name} (${state.user.email})
+              </p>
+              <p class="text-gray-600 mb-4">
+                <strong>Última atualização:</strong> ${new Date().toLocaleDateString('pt-PT')}
+              </p>
+              <p class="text-gray-600">
+                <strong>Status:</strong> <span class="text-green-600 font-semibold">✓ Online</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function ProductManagementPage() {
+      if (!state.user || state.user.role !== 'admin') {
+        navigate('home');
+        return '<div class="text-center py-12"><p>Acesso negado</p></div>';
+      }
+
+      // Group products by category
+      const categories = {};
+      state.categories.forEach(cat => {
+        categories[cat.id] = { name: cat.name, icon: cat.icon, products: [] };
+      });
+
+      mockProducts.forEach(product => {
+        if (categories[product.categoryId]) {
+          categories[product.categoryId].products.push(product);
+        }
+      });
+
+      // Calculate profit margin using new formula
+      const calculateMargin = (product) => {
+        const costPrice = product.costPrice || (product.price * 0.7);
+        const ivaRate = product.ivaRate || 23;
+        const costWithIVA = costPrice + (costPrice * ivaRate / 100);
+        const margin = ((product.price - costWithIVA) / product.price * 100).toFixed(1);
+        return margin;
+      };
+
+      return `
+        <div class="max-w-7xl mx-auto px-4 py-8">
+          <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">📦 Gerenciar Produtos</h1>
+            <div class="flex gap-4">
+              <button onclick="toggleCategoryManagement()" class="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-semibold">
+                🏷️ Gerenciar Categorias
+              </button>
+              <button onclick="showAddProductForm()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                ➕ Adicionar Produto
+              </button>
+            </div>
+          </div>
+
+          <div id="categoryManagement" class="hidden bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6">🏷️ Gerenciar Categorias e Subcategorias</h2>
+
+            <div class="grid grid-cols-1 gap-6 mb-6">
+              <div>
+                <h3 class="font-semibold mb-4">Categorias e Subcategorias Existentes</h3>
+                <div class="space-y-4" id="categoryList">
+                  ${state.categories.map(cat => {
+                    const count = mockProducts.filter(p => p.categoryId === cat.id).length;
+                    return `
+                      <div class="border border-gray-200 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-3">
+                          <div class="flex items-center gap-3">
+                            <span class="text-2xl">${cat.icon}</span>
+                            <div>
+                              <p class="font-bold text-lg">${cat.name}</p>
+                              <p class="text-xs text-gray-500">${count} produtos</p>
+                            </div>
+                          </div>
+                          <div class="flex gap-2">
+                            <button onclick="showEditCategoryModal('${cat.id}')" class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                              ✏️ Editar
+                            </button>
+                            <button onclick="confirmDeleteCategory('${cat.id}')" class="text-red-600 hover:text-red-800 text-sm font-semibold">
+                              🗑️ Apagar
+                            </button>
+                          </div>
+                        </div>
+                        ${cat.subcategories && cat.subcategories.length > 0 ? `
+                          <div class="ml-8 space-y-2">
+                            ${cat.subcategories.map(subcat => {
+                              const subCount = mockProducts.filter(p => p.subcategoryId === subcat.id).length;
+                              return `
+                                <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                  <div class="flex items-center gap-2">
+                                    <span class="text-lg">${subcat.icon}</span>
+                                    <span class="text-sm font-medium">${subcat.name}</span>
+                                    <span class="text-xs text-gray-500">(${subCount})</span>
+                                  </div>
+                                  <button onclick="confirmDeleteSubcategory('${cat.id}', '${subcat.id}')" class="text-red-600 hover:text-red-800 text-xs font-semibold">
+                                    🗑️
+                                  </button>
+                                </div>
+                              `;
+                            }).join('')}
+                          </div>
+                        ` : '<p class="ml-8 text-sm text-gray-400 italic">Nenhuma subcategoria</p>'}
+                        <button onclick="showAddSubcategoryForm('${cat.id}')" class="ml-8 mt-2 text-purple-600 hover:text-purple-800 text-sm font-semibold">
+                          ➕ Adicionar Subcategoria
+                        </button>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="font-semibold mb-4">Adicionar Nova Categoria</h3>
+                  <div class="space-y-4">
+                    <div>
+                      <label class="block text-sm font-semibold mb-2">Nome da Categoria *</label>
+                      <input type="text" id="newCategoryName" placeholder="Ex: Bebidas" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold mb-2">Ícone/Emoji *</label>
+                      <input type="text" id="newCategoryIcon" placeholder="Ex: 🥤" maxlength="2" class="w-full px-4 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                      <label class="block text-sm font-semibold mb-2">ID da Categoria (auto-gerado)</label>
+                      <input type="text" id="newCategoryId" placeholder="Gerado automaticamente" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly>
+                    </div>
+                    <button onclick="addNewCategory()" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                      ➕ Adicionar Categoria
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="flex justify-end">
+              <button onclick="toggleCategoryManagement()" class="bg-gray-400 text-white px-6 py-2 rounded-lg hover:bg-gray-500 transition font-semibold">
+                ✖ Fechar
+              </button>
+            </div>
+          </div>
+
+          <div id="addProductForm" class="hidden bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-2xl font-bold mb-6" id="formTitle">Novo Produto</h2>
+            <input type="hidden" id="editProductId">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label class="block text-sm font-semibold mb-2">Nome do Produto *</label>
+                <input type="text" id="productName" placeholder="Nome do produto" class="w-full px-4 py-2 border rounded-lg">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Preço de Custo (EUR) *</label>
+                <input type="number" step="0.01" id="productCostPrice" placeholder="Preço de Custo" class="w-full px-4 py-2 border rounded-lg" oninput="calculateProfitPreview()">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Preço de Venda (EUR) *</label>
+                <input type="number" step="0.01" id="productPrice" placeholder="Preço de Venda" class="w-full px-4 py-2 border rounded-lg" oninput="calculateProfitPreview()">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">IVA (%)</label>
+                <select id="productIVA" class="w-full px-4 py-2 border rounded-lg" onchange="calculateProfitPreview()">
+                  <option value="0">0% - Isento de IVA</option>
+                  <option value="6">6% - Taxa Reduzida</option>
+                  <option value="13">13% - Taxa Intermédia</option>
+                  <option value="23" selected>23% - Taxa Normal</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Stock *</label>
+                <input type="number" id="productStock" placeholder="Stock" class="w-full px-4 py-2 border rounded-lg">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Categoria *</label>
+                <select id="productCategory" class="w-full px-4 py-2 border rounded-lg" onchange="updateSubcategoryDropdown()">
+                  ${state.categories.map(cat => `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`).join('')}
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold mb-2">Subcategoria</label>
+                <select id="productSubcategory" class="w-full px-4 py-2 border rounded-lg">
+                  <option value="">Nenhuma (Opcional)</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="profitPreview" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg hidden">
+              <h3 class="font-semibold text-sm mb-2">Margem de Lucro Prevista:</h3>
+              <div class="text-2xl font-bold" id="profitPercentage">0%</div>
+              <p class="text-xs text-gray-600 mt-1">Fórmula: ((Preço Custo + IVA) - Preço Venda) / Preço Venda × 100</p>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-semibold mb-2">Descrição do Produto *</label>
+              <textarea id="productDescription" placeholder="Descrição do produto" class="w-full px-4 py-2 border rounded-lg" rows="3"></textarea>
+            </div>
+
+            <div class="mb-4">
+              <label class="block text-sm font-semibold mb-2">Imagem do Produto</label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs text-gray-600 mb-1">Upload de Imagem</label>
+                  <input type="file" id="productImageFile" accept="image/*" onchange="handleImageUpload()" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-600 mb-1">ou URL da Imagem</label>
+                  <input type="text" id="productImageURL" placeholder="https://exemplo.com/imagem.jpg" class="w-full px-4 py-2 border rounded-lg">
+                </div>
+              </div>
+              <div id="imagePreview" class="mt-4 hidden">
+                <label class="block text-xs text-gray-600 mb-1">Preview:</label>
+                <img id="previewImg" src="" class="w-32 h-32 object-cover rounded-lg border">
+              </div>
+            </div>
+
+            <div class="flex gap-4">
+              <button onclick="saveNewProduct()" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition font-semibold">
+                💾 Salvar
+              </button>
+              <button onclick="cancelAddProduct()" class="bg-gray-400 text-white px-6 py-2 rounded-lg hover:bg-gray-500 transition font-semibold">
+                ✖ Cancelar
+              </button>
+            </div>
+          </div>
+
+          ${Object.entries(categories).map(([categoryId, category]) => {
+            if (category.products.length === 0) return '';
+            return `
+              <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+                <div class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-4">
+                  <h2 class="text-xl font-bold">
+                    ${category.icon} ${category.name}
+                    <span class="text-sm font-normal opacity-90">(${category.products.length} produtos)</span>
+                  </h2>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gray-100">
+                      <tr>
+                        <th class="px-4 py-3 text-left font-semibold text-sm">Produto</th>
+                        <th class="px-4 py-3 text-left font-semibold text-sm">Preço Custo</th>
+                        <th class="px-4 py-3 text-left font-semibold text-sm">Preço Venda</th>
+                        <th class="px-4 py-3 text-left font-semibold text-sm">Margem</th>
+                        <th class="px-4 py-3 text-left font-semibold text-sm">Stock</th>
+                        <th class="px-4 py-3 text-left font-semibold text-sm">IVA</th>
+                        <th class="px-4 py-3 text-left font-semibold text-sm">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${category.products.map(product => {
+                        const margin = calculateMargin(product);
+                        const marginColor = margin > 40 ? 'text-green-600' : margin > 20 ? 'text-yellow-600' : 'text-red-600';
+                        return `
+                          <tr class="border-t hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                              <div class="flex items-center gap-3">
+                                <img src="${product.image}" class="w-12 h-12 object-cover rounded">
+                                <span class="font-medium">${product.name}</span>
+                              </div>
+                            </td>
+                            <td class="px-4 py-3 text-gray-700">${formatCurrency(product.costPrice || product.price * 0.7)}</td>
+                            <td class="px-4 py-3 font-semibold text-pink-600">${formatCurrency(product.price)}</td>
+                            <td class="px-4 py-3">
+                              <span class="font-bold ${marginColor}">+${margin}%</span>
+                            </td>
+                            <td class="px-4 py-3">
+                              <span class="px-3 py-1 rounded-full text-xs font-semibold ${product.stock > 20 ? 'bg-green-100 text-green-700' : product.stock > 10 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}">
+                                ${product.stock} un.
+                              </span>
+                            </td>
+                            <td class="px-4 py-3 text-gray-600">${product.ivaRate}%</td>
+                            <td class="px-4 py-3">
+                              <button onclick="editProductForm('${product.id}')" class="bg-blue-500 text-white px-3 py-1 rounded text-sm mr-2 hover:bg-blue-600 transition">
+                                ✏️ Editar
+                              </button>
+                              <button onclick="confirmDeleteProduct('${product.id}')" class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600 transition">
+                                🗑️ Apagar
+                              </button>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('')}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function OrderManagementPage() {
+      if (!state.user || state.user.role !== 'admin') {
+        navigate('home');
+        return '<div class="text-center py-12"><p>Acesso negado</p></div>';
+      }
+
+      return `
+        <div class="max-w-7xl mx-auto px-4 py-8">
+          <h1 class="text-3xl font-bold mb-8">📋 Gerenciar Encomendas</h1>
+
+          <div class="bg-white rounded-lg shadow overflow-hidden">
+            ${state.orders.length === 0 ? `
+              <div class="p-8 text-center text-gray-500">
+                <p>Nenhuma encomenda registrada ainda</p>
+              </div>
+            ` : `
+              <table class="w-full">
+                <thead class="bg-gray-100">
+                  <tr>
+                    <th class="px-6 py-3 text-left font-semibold">ID</th>
+                    <th class="px-6 py-3 text-left font-semibold">Data</th>
+                    <th class="px-6 py-3 text-left font-semibold">Total</th>
+                    <th class="px-6 py-3 text-left font-semibold">Itens</th>
+                    <th class="px-6 py-3 text-left font-semibold">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${state.orders.map((order, i) => `
+                    <tr class="border-t hover:bg-gray-50">
+                      <td class="px-6 py-3 font-semibold">#${order.id}</td>
+                      <td class="px-6 py-3">${new Date(order.date).toLocaleDateString('pt-PT')}</td>
+                      <td class="px-6 py-3">${formatCurrency(order.total)}</td>
+                      <td class="px-6 py-3">${order.items.length} produtos</td>
+                      <td class="px-6 py-3">
+                        <span class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                          Completa
+                        </span>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // ADMIN FUNCTIONS
+    // ============================================
+
+    function showAddProductForm() {
+      document.getElementById('formTitle').textContent = 'Novo Produto';
+      document.getElementById('editProductId').value = '';
+      document.getElementById('addProductForm').classList.remove('hidden');
+      document.getElementById('productIVA').value = '23';
+      window.scrollTo(0, document.getElementById('addProductForm').offsetTop - 100);
+    }
+
+    function cancelAddProduct() {
+      document.getElementById('addProductForm').classList.add('hidden');
+      document.getElementById('editProductId').value = '';
+      document.getElementById('productName').value = '';
+      document.getElementById('productCostPrice').value = '';
+      document.getElementById('productPrice').value = '';
+      document.getElementById('productStock').value = '';
+      document.getElementById('productCategory').value = 'mercearia';
+      document.getElementById('productIVA').value = '23';
+      document.getElementById('productImageFile').value = '';
+      document.getElementById('productImageURL').value = '';
+      document.getElementById('productDescription').value = '';
+      document.getElementById('imagePreview').classList.add('hidden');
+      document.getElementById('formTitle').textContent = 'Novo Produto';
+    }
+
+    function handleImageUpload() {
+      const fileInput = document.getElementById('productImageFile');
+      const file = fileInput.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById('imagePreview');
+          const previewImg = document.getElementById('previewImg');
+          previewImg.src = e.target.result;
+          preview.classList.remove('hidden');
+          document.getElementById('productImageURL').value = '';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function saveNewProduct() {
+      const editId = document.getElementById('editProductId').value;
+      const name = document.getElementById('productName').value;
+      const costPrice = parseFloat(document.getElementById('productCostPrice').value);
+      const price = parseFloat(document.getElementById('productPrice').value);
+      const stock = parseInt(document.getElementById('productStock').value);
+      const category = document.getElementById('productCategory').value;
+      const subcategory = document.getElementById('productSubcategory').value;
+      const ivaRate = parseInt(document.getElementById('productIVA').value);
+      const description = document.getElementById('productDescription').value;
+
+      if (!name || !costPrice || !price || !stock || !description) {
+        showNotification('Por favor preencha todos os campos obrigatórios');
+        return;
+      }
+
+      if (costPrice >= price) {
+        showNotification('⚠️ O preço de venda deve ser maior que o preço de custo!');
+        return;
+      }
+
+      // Get image from file upload or URL
+      const imageFile = document.getElementById('previewImg').src;
+      const imageURL = document.getElementById('productImageURL').value;
+      const image = imageFile && !imageFile.includes('data:text/html') ? imageFile :
+                    imageURL || 'https://via.placeholder.com/300x300?text=' + encodeURIComponent(name);
+
+      const productData = {
+        name,
+        price,
+        costPrice,
+        originalPrice: price,
+        stock,
+        inStock: stock > 0,
+        categoryId: category,
+        subcategoryId: subcategory,
+        ivaRate,
+        image,
+        description,
+        rating: 4.5,
+        reviews: 0,
+        isFeatured: false,
+        isPromotion: false,
+        discount: 0
+      };
+
+      if (editId) {
+        // Update existing product
+        const index = mockProducts.findIndex(p => p.id === editId);
+        if (index !== -1) {
+          mockProducts[index] = { ...mockProducts[index], ...productData };
+          showNotification('✅ Produto atualizado com sucesso!');
+        }
+      } else {
+        // Add new product
+        const newProduct = {
+          id: Date.now().toString(),
+          ...productData
+        };
+        mockProducts.push(newProduct);
+        showNotification('✅ Produto adicionado com sucesso!');
+      }
+
+      localStorage.setItem('allProducts', JSON.stringify(mockProducts));
+      cancelAddProduct();
+      render();
+    }
+
+    function editProductForm(productId) {
+      const product = mockProducts.find(p => p.id === productId);
+      if (!product) {
+        showNotification('❌ Produto não encontrado');
+        return;
+      }
+
+      // Fill form with product data
+      document.getElementById('formTitle').textContent = '✏️ Editar Produto';
+      document.getElementById('editProductId').value = product.id;
+      document.getElementById('productName').value = product.name;
+      document.getElementById('productCostPrice').value = product.costPrice || (product.price * 0.7).toFixed(2);
+      document.getElementById('productPrice').value = product.price;
+      document.getElementById('productStock').value = product.stock;
+      document.getElementById('productCategory').value = product.categoryId;
+      updateSubcategoryDropdown(product.subcategoryId || '');
+      document.getElementById('productIVA').value = product.ivaRate;
+      document.getElementById('productDescription').value = product.description;
+
+      // Handle image
+      if (product.image) {
+        if (product.image.startsWith('data:')) {
+          // Base64 image
+          document.getElementById('previewImg').src = product.image;
+          document.getElementById('imagePreview').classList.remove('hidden');
+        } else {
+          // URL image
+          document.getElementById('productImageURL').value = product.image;
+          document.getElementById('previewImg').src = product.image;
+          document.getElementById('imagePreview').classList.remove('hidden');
+        }
+      }
+
+      // Show form and scroll to it
+      document.getElementById('addProductForm').classList.remove('hidden');
+      window.scrollTo(0, document.getElementById('addProductForm').offsetTop - 100);
+    }
+
+    function confirmDeleteProduct(productId) {
+      const product = mockProducts.find(p => p.id === productId);
+      if (!product) return;
+
+      // Create custom confirmation dialog
+      const confirmed = confirm(
+        `🗑️ CONFIRMAR EXCLUSÃO\n\n` +
+        `Tem certeza que deseja apagar este produto?\n\n` +
+        `Produto: ${product.name}\n` +
+        `Preço: ${formatCurrency(product.price)}\n` +
+        `Stock: ${product.stock} unidades\n\n` +
+        `Esta ação não pode ser desfeita!`
+      );
+
+      if (confirmed) {
+        mockProducts = mockProducts.filter(p => p.id !== productId);
+        localStorage.setItem('allProducts', JSON.stringify(mockProducts));
+        showNotification('🗑️ Produto apagado com sucesso!');
+        render();
+      }
+    }
+
+    // Calculate profit preview in real-time
+    function calculateProfitPreview() {
+      const costPrice = parseFloat(document.getElementById('productCostPrice').value) || 0;
+      const sellingPrice = parseFloat(document.getElementById('productPrice').value) || 0;
+      const ivaRate = parseFloat(document.getElementById('productIVA').value) || 23;
+
+      if (costPrice > 0 && sellingPrice > 0) {
+        const costWithIVA = costPrice + (costPrice * ivaRate / 100);
+        const profit = ((sellingPrice - costWithIVA) / sellingPrice * 100).toFixed(1);
+
+        document.getElementById('profitPreview').classList.remove('hidden');
+        document.getElementById('profitPercentage').textContent = profit + '%';
+
+        const profitEl = document.getElementById('profitPercentage');
+        if (profit > 20) {
+          profitEl.className = 'text-2xl font-bold text-green-600';
+        } else if (profit > 10) {
+          profitEl.className = 'text-2xl font-bold text-yellow-600';
+        } else {
+          profitEl.className = 'text-2xl font-bold text-red-600';
+        }
+      } else {
+        document.getElementById('profitPreview').classList.add('hidden');
+      }
+    }
+
+    // Category management functions
+    function toggleCategoryManagement() {
+      const elem = document.getElementById('categoryManagement');
+      elem.classList.toggle('hidden');
+      if (!elem.classList.contains('hidden')) {
+        window.scrollTo(0, elem.offsetTop - 100);
+      }
+    }
+
+    function addNewCategory() {
+      const name = document.getElementById('newCategoryName').value.trim();
+      const icon = document.getElementById('newCategoryIcon').value.trim();
+
+      if (!name || !icon) {
+        showNotification('Por favor preencha todos os campos da categoria');
+        return;
+      }
+
+      const id = name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+
+      if (state.categories.find(c => c.id === id)) {
+        showNotification('⚠️ Já existe uma categoria com este nome!');
+        return;
+      }
+
+      const newCategory = { id, name, icon };
+      state.categories.push(newCategory);
+      localStorage.setItem('categories', JSON.stringify(state.categories));
+
+      document.getElementById('newCategoryName').value = '';
+      document.getElementById('newCategoryIcon').value = '';
+      document.getElementById('newCategoryId').value = '';
+
+      showNotification('✅ Categoria adicionada com sucesso!');
+      render();
+    }
+
+    function confirmDeleteCategory(categoryId) {
+      const category = state.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      const productsInCategory = mockProducts.filter(p => p.categoryId === categoryId).length;
+
+      if (productsInCategory > 0) {
+        showNotification(`⚠️ Não pode apagar esta categoria! Existem ${productsInCategory} produtos nesta categoria.`);
+        return;
+      }
+
+      const confirmed = confirm(
+        `🗑️ CONFIRMAR EXCLUSÃO DE CATEGORIA\n\n` +
+        `Tem certeza que deseja apagar esta categoria?\n\n` +
+        `Categoria: ${category.icon} ${category.name}\n\n` +
+        `Esta ação não pode ser desfeita!`
+      );
+
+      if (confirmed) {
+        state.categories = state.categories.filter(c => c.id !== categoryId);
+        localStorage.setItem('categories', JSON.stringify(state.categories));
+        showNotification('🗑️ Categoria apagada com sucesso!');
+        render();
+      }
+    }
+
+    // Auto-generate category ID as user types
+    document.addEventListener('input', (e) => {
+      if (e.target.id === 'newCategoryName') {
+        const name = e.target.value.trim();
+        const id = name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+        document.getElementById('newCategoryId').value = id;
+      }
+      if (e.target.id === 'newSubcategoryName') {
+        const name = e.target.value.trim();
+        const id = name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+        document.getElementById('newSubcategoryId').value = id;
+      }
+    });
+
+    // Subcategory management functions
+    function showAddSubcategoryForm(categoryId) {
+      const category = state.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      document.getElementById('subcategoryParentId').value = categoryId;
+      document.getElementById('modalCategoryName').textContent = `${category.icon} ${category.name}`;
+      document.getElementById('newSubcategoryName').value = '';
+      document.getElementById('newSubcategoryIcon').value = '';
+      document.getElementById('newSubcategoryId').value = '';
+      document.getElementById('subcategoryModal').classList.remove('hidden');
+    }
+
+    function closeSubcategoryModal(event) {
+      // If event is provided and it's clicking on the modal content, don't close
+      if (event && event.target !== event.currentTarget && event.type === 'click') {
+        return;
+      }
+
+      document.getElementById('subcategoryModal').classList.add('hidden');
+      document.getElementById('subcategoryParentId').value = '';
+      document.getElementById('subcategoryParentName').value = '';
+      document.getElementById('newSubcategoryName').value = '';
+      document.getElementById('newSubcategoryIcon').value = '';
+      document.getElementById('newSubcategoryId').value = '';
+    }
+
+    function addNewSubcategory() {
+      const parentId = document.getElementById('subcategoryParentId').value;
+      const name = document.getElementById('newSubcategoryName').value.trim();
+      const icon = document.getElementById('newSubcategoryIcon').value.trim();
+
+      if (!name || !icon) {
+        showNotification('Por favor preencha todos os campos da subcategoria');
+        return;
+      }
+
+      const id = name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '');
+      const category = state.categories.find(c => c.id === parentId);
+
+      if (!category) {
+        showNotification('⚠️ Categoria pai não encontrada!');
+        return;
+      }
+
+      if (!category.subcategories) {
+        category.subcategories = [];
+      }
+
+      if (category.subcategories.find(s => s.id === id)) {
+        showNotification('⚠️ Já existe uma subcategoria com este nome!');
+        return;
+      }
+
+      const newSubcategory = { id, name, icon };
+      category.subcategories.push(newSubcategory);
+      localStorage.setItem('categories', JSON.stringify(state.categories));
+
+      closeSubcategoryModal();
+      showNotification('✅ Subcategoria adicionada com sucesso!');
+      render();
+    }
+
+    function confirmDeleteSubcategory(categoryId, subcategoryId) {
+      const category = state.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      const subcategory = category.subcategories.find(s => s.id === subcategoryId);
+      if (!subcategory) return;
+
+      const productsInSubcategory = mockProducts.filter(p => p.subcategoryId === subcategoryId).length;
+
+      if (productsInSubcategory > 0) {
+        showNotification(`⚠️ Não pode apagar esta subcategoria! Existem ${productsInSubcategory} produtos nesta subcategoria.`);
+        return;
+      }
+
+      const confirmed = confirm(
+        `🗑️ CONFIRMAR EXCLUSÃO DE SUBCATEGORIA\n\n` +
+        `Tem certeza que deseja apagar esta subcategoria?\n\n` +
+        `Subcategoria: ${subcategory.icon} ${subcategory.name}\n` +
+        `Categoria: ${category.icon} ${category.name}\n\n` +
+        `Esta ação não pode ser desfeita!`
+      );
+
+      if (confirmed) {
+        category.subcategories = category.subcategories.filter(s => s.id !== subcategoryId);
+        localStorage.setItem('categories', JSON.stringify(state.categories));
+        showNotification('🗑️ Subcategoria apagada com sucesso!');
+        render();
+      }
+    }
+
+    // ============================================
+    // EDIT CATEGORY MODAL FUNCTIONS
+    // ============================================
+
+    function showEditCategoryModal(categoryId) {
+      const category = state.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      // Populate category fields
+      document.getElementById('editCategoryId').value = categoryId;
+      document.getElementById('editCategoryName').value = category.name;
+      document.getElementById('editCategoryIcon').value = category.icon;
+
+      // Clear new subcategory fields
+      document.getElementById('editModalNewSubcategoryName').value = '';
+      document.getElementById('editModalNewSubcategoryIcon').value = '';
+
+      // Populate subcategories list
+      renderEditModalSubcategories(categoryId);
+
+      // Show modal
+      document.getElementById('editCategoryModal').classList.remove('hidden');
+    }
+
+    function closeEditCategoryModal(event) {
+      // If event is provided and it's clicking on the modal content, don't close
+      if (event && event.target !== event.currentTarget && event.type === 'click') {
+        return;
+      }
+
+      document.getElementById('editCategoryModal').classList.add('hidden');
+      document.getElementById('editCategoryId').value = '';
+      document.getElementById('editCategoryName').value = '';
+      document.getElementById('editCategoryIcon').value = '';
+      document.getElementById('editModalNewSubcategoryName').value = '';
+      document.getElementById('editModalNewSubcategoryIcon').value = '';
+    }
+
+    function renderEditModalSubcategories(categoryId) {
+      const category = state.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      const subcategoriesList = document.getElementById('editCategorySubcategoriesList');
+
+      if (!category.subcategories || category.subcategories.length === 0) {
+        subcategoriesList.innerHTML = '<p class="text-sm text-gray-400 italic p-3 bg-gray-50 rounded">Nenhuma subcategoria ainda</p>';
+        return;
+      }
+
+      subcategoriesList.innerHTML = category.subcategories.map(subcat => {
+        const subCount = mockProducts.filter(p => p.subcategoryId === subcat.id).length;
+        return `
+          <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">${subcat.icon}</span>
+              <div>
+                <span class="font-medium">${subcat.name}</span>
+                <span class="text-xs text-gray-500 ml-2">(${subCount} produtos)</span>
+              </div>
+            </div>
+            <button onclick="deleteSubcategoryFromEditModal('${categoryId}', '${subcat.id}')" class="text-red-600 hover:text-red-800 font-semibold text-sm px-3 py-1 hover:bg-red-50 rounded transition">
+              🗑️ Apagar
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function addSubcategoryFromEditModal() {
+      const categoryId = document.getElementById('editCategoryId').value;
+      const name = document.getElementById('editModalNewSubcategoryName').value.trim();
+      const icon = document.getElementById('editModalNewSubcategoryIcon').value.trim();
+
+      if (!name || !icon) {
+        showNotification('⚠️ Por favor preencha o nome e ícone da subcategoria');
+        return;
+      }
+
+      const category = state.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      // Initialize subcategories array if it doesn't exist
+      if (!category.subcategories) {
+        category.subcategories = [];
+      }
+
+      // Generate ID
+      const id = `${categoryId}_${name.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9]/g, '')}`;
+
+      // Check if subcategory already exists
+      if (category.subcategories.find(s => s.id === id)) {
+        showNotification('⚠️ Já existe uma subcategoria com este nome!');
+        return;
+      }
+
+      // Add new subcategory
+      const newSubcategory = { id, name, icon };
+      category.subcategories.push(newSubcategory);
+
+      // Clear form fields
+      document.getElementById('editModalNewSubcategoryName').value = '';
+      document.getElementById('editModalNewSubcategoryIcon').value = '';
+
+      // Re-render subcategories list
+      renderEditModalSubcategories(categoryId);
+
+      showNotification('✅ Subcategoria adicionada! Clique em "Salvar Alterações" para confirmar.');
+    }
+
+    function deleteSubcategoryFromEditModal(categoryId, subcategoryId) {
+      const category = state.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      const subcategory = category.subcategories.find(s => s.id === subcategoryId);
+      if (!subcategory) return;
+
+      const productsInSubcategory = mockProducts.filter(p => p.subcategoryId === subcategoryId).length;
+
+      if (productsInSubcategory > 0) {
+        showNotification(`⚠️ Não pode apagar esta subcategoria! Existem ${productsInSubcategory} produtos nesta subcategoria.`);
+        return;
+      }
+
+      const confirmed = confirm(
+        `🗑️ CONFIRMAR EXCLUSÃO\n\n` +
+        `Tem certeza que deseja apagar esta subcategoria?\n\n` +
+        `Subcategoria: ${subcategory.icon} ${subcategory.name}\n\n` +
+        `Esta ação não pode ser desfeita!`
+      );
+
+      if (confirmed) {
+        category.subcategories = category.subcategories.filter(s => s.id !== subcategoryId);
+        renderEditModalSubcategories(categoryId);
+        showNotification('🗑️ Subcategoria apagada! Clique em "Salvar Alterações" para confirmar.');
+      }
+    }
+
+    function saveEditedCategory() {
+      const categoryId = document.getElementById('editCategoryId').value;
+      const name = document.getElementById('editCategoryName').value.trim();
+      const icon = document.getElementById('editCategoryIcon').value.trim();
+
+      if (!name || !icon) {
+        showNotification('⚠️ Por favor preencha todos os campos da categoria');
+        return;
+      }
+
+      const category = state.categories.find(c => c.id === categoryId);
+      if (!category) return;
+
+      // Update category
+      category.name = name;
+      category.icon = icon;
+
+      // Save to localStorage
+      localStorage.setItem('categories', JSON.stringify(state.categories));
+
+      // Close modal and re-render
+      closeEditCategoryModal();
+      showNotification('✅ Categoria atualizada com sucesso!');
+      render();
+    }
+
+    function updateSubcategoryDropdown(selectedValue = null) {
+      const categoryId = document.getElementById('productCategory').value;
+      const subcategorySelect = document.getElementById('productSubcategory');
+      const currentValue = selectedValue || document.getElementById('productSubcategory').value;
+
+      subcategorySelect.innerHTML = '<option value="">Nenhuma (Opcional)</option>';
+
+      const category = state.categories.find(c => c.id === categoryId);
+      if (category && category.subcategories) {
+        category.subcategories.forEach(subcat => {
+          const option = document.createElement('option');
+          option.value = subcat.id;
+          option.textContent = `${subcat.icon} ${subcat.name}`;
+          subcategorySelect.appendChild(option);
+        });
+      }
+
+      // Restore the selected value after populating options
+      if (currentValue) {
+        subcategorySelect.value = currentValue;
+      }
+    }
+
+    // ============================================
+    // MAIN RENDER FUNCTION
+    // ============================================
+
+    function render() {
+      const pages = {
+        home: HomePage,
+        products: ProductsPage,
+        product: ProductDetailPage,
+        cart: CartPage,
+        checkout: CheckoutPage,
+        login: LoginPage,
+        register: RegisterPage,
+        account: AccountPage,
+        admin: AdminDashboardPage,
+        productManagement: ProductManagementPage,
+        orderManagement: OrderManagementPage
+      };
+
+      const PageComponent = pages[state.currentPage] || HomePage;
+      const app = document.getElementById('app');
+
+      app.innerHTML = `
+        ${Header()}
+        <main class="min-h-screen">
+          ${PageComponent()}
+        </main>
+        ${Footer()}
+      `;
+    }
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+
+    function init() {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) state.user = JSON.parse(savedUser);
+
+      const savedOrders = localStorage.getItem('orders');
+      if (savedOrders) state.orders = JSON.parse(savedOrders);
+
+      render();
+    }
+
+    // Start the app
+    init();
+  </script>
+
+  <!-- Subcategory Modal -->
+  <div id="subcategoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeSubcategoryModal(event)">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto transform transition-all" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between p-6 border-b bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg">
+        <div>
+          <h3 class="text-xl font-bold">Adicionar Subcategoria</h3>
+          <p class="text-sm opacity-90 mt-1">para <span id="modalCategoryName"></span></p>
+        </div>
+        <button onclick="closeSubcategoryModal()" class="text-white hover:text-gray-200 text-3xl leading-none">&times;</button>
+      </div>
+      <div class="p-6">
+        <div class="space-y-4">
+          <input type="hidden" id="subcategoryParentId">
+          <div>
+            <label class="block text-sm font-semibold mb-2">Nome da Subcategoria *</label>
+            <input type="text" id="newSubcategoryName" placeholder="Ex: Refrigerantes" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-2">Ícone/Emoji *</label>
+            <input type="text" id="newSubcategoryIcon" placeholder="Ex: 🥤" maxlength="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-2xl">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-2">ID da Subcategoria (auto-gerado)</label>
+            <input type="text" id="newSubcategoryId" placeholder="Gerado automaticamente" class="w-full px-4 py-2 border rounded-lg bg-gray-100" readonly>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3 p-6 border-t bg-gray-50 rounded-b-lg">
+        <button onclick="addNewSubcategory()" class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold shadow-md hover:shadow-lg">
+          ➕ Adicionar Subcategoria
+        </button>
+        <button onclick="closeSubcategoryModal()" class="px-6 bg-gray-400 text-white py-3 rounded-lg hover:bg-gray-500 transition font-semibold">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Category Modal -->
+  <div id="editCategoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeEditCategoryModal(event)">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-auto transform transition-all max-h-[90vh] flex flex-col" onclick="event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-t-lg">
+        <div>
+          <h3 class="text-xl font-bold">✏️ Editar Categoria</h3>
+          <p class="text-sm opacity-90 mt-1">Edite as informações e subcategorias</p>
+        </div>
+        <button onclick="closeEditCategoryModal()" class="text-white hover:text-gray-200 text-3xl leading-none">&times;</button>
+      </div>
+
+      <!-- Modal Body - Scrollable -->
+      <div class="p-6 overflow-y-auto flex-1">
+        <input type="hidden" id="editCategoryId">
+
+        <!-- Category Info Section -->
+        <div class="space-y-4 mb-6">
+          <h4 class="font-bold text-lg border-b pb-2">Informações da Categoria</h4>
+          <div>
+            <label class="block text-sm font-semibold mb-2">Nome da Categoria *</label>
+            <input type="text" id="editCategoryName" placeholder="Ex: Bebidas" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold mb-2">Ícone/Emoji *</label>
+            <input type="text" id="editCategoryIcon" placeholder="Ex: 🥤" maxlength="2" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl">
+          </div>
+        </div>
+
+        <!-- Subcategories Section -->
+        <div class="space-y-4">
+          <h4 class="font-bold text-lg border-b pb-2">Subcategorias</h4>
+          <div id="editCategorySubcategoriesList" class="space-y-2">
+            <!-- Subcategories will be dynamically populated -->
+          </div>
+
+          <!-- Add New Subcategory Form -->
+          <div class="mt-4 pt-4 border-t">
+            <h5 class="font-semibold text-md mb-3">➕ Adicionar Nova Subcategoria</h5>
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-sm font-semibold mb-2">Nome *</label>
+                  <input type="text" id="editModalNewSubcategoryName" placeholder="Ex: Refrigerantes" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold mb-2">Ícone *</label>
+                  <input type="text" id="editModalNewSubcategoryIcon" placeholder="Ex: 🥤" maxlength="2" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl">
+                </div>
+              </div>
+              <button onclick="addSubcategoryFromEditModal()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition font-semibold text-sm">
+                ➕ Adicionar Subcategoria
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex gap-3 p-6 border-t bg-gray-50 rounded-b-lg">
+        <button onclick="saveEditedCategory()" class="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-md hover:shadow-lg">
+          💾 Salvar Alterações
+        </button>
+        <button onclick="closeEditCategoryModal()" class="px-6 bg-gray-400 text-white py-3 rounded-lg hover:bg-gray-500 transition font-semibold">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -37,3 +37,7 @@ export const selectUserFullName = createSelector(
   selectCurrentUser,
   (user) => user ? `${user.firstName} ${user.lastName}` : ''
 );
+
+// Aliases for backward compatibility
+export const selectIsLoading = selectAuthLoading;
+export const selectError = selectAuthError;

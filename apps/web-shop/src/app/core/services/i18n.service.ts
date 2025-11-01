@@ -23,8 +23,8 @@ export class I18nService {
    * Initialize translation service with default language
    */
   init(): void {
-    this.translate.addLanguages(environment.supportedLanguages);
-    this.translate.setDefaultLanguage(environment.defaultLanguage);
+    this.translate.addLangs(environment.supportedLanguages);
+    this.translate.setDefaultLang(environment.defaultLanguage);
     const language = this.getStoredLanguage();
     this.translate.use(language);
     this.currentLanguageSubject.next(language);
@@ -80,7 +80,7 @@ export class I18nService {
   /**
    * Translate a key
    */
-  translate(key: string, params?: any): Observable<any> {
+  get(key: string, params?: any): Observable<any> {
     return this.translate.get(key, params);
   }
 

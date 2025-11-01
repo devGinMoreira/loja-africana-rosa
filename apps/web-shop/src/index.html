@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Loja Africana Rosa - E-commerce Platform</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Loja Africana Rosa - Premium African specialty products">
+  <meta name="theme-color" content="#dc2626">
+  
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="Loja Africana Rosa">
+  <meta property="og:description" content="Premium African specialty products - Groceries, Meat, Fish, Cosmetics">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://loja-africana-rosa.com">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <style>
+    @tailwind base;
+    @tailwind components;
+    @tailwind utilities;
+  </style>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f9fafb;
+      color: #111827;
+    }
+    
+    html, body {
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <app-root></app-root>
+  
+  <!-- Loading indicator -->
+  <div id="app-loading" style="
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  ">
+    <div style="text-align: center;">
+      <div style="
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(255, 255, 255, 0.2);
+        border-top-color: white;
+        border-radius: 50%;
+        margin: 0 auto 20px;
+        animation: spin 1s linear infinite;
+      "></div>
+      <p style="color: white; font-size: 18px; font-weight: 500;">Loading...</p>
+    </div>
+  </div>
+  
+  <script>
+    // Hide loading indicator once Angular app is bootstrapped
+    document.addEventListener('DOMContentLoaded', function() {
+      const loader = document.getElementById('app-loading');
+      if (loader) {
+        // Hide after a short delay to ensure Angular has rendered
+        setTimeout(function() {
+          loader.style.display = 'none';
+        }, 500);
+      }
+    });
+  </script>
+  
+  <style>
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</body>
+</html>

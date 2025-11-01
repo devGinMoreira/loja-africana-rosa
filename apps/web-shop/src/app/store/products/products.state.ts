@@ -5,58 +5,43 @@ export interface Product {
   description: string;
   price: number;
   originalPrice?: number;
-  category: string;
+  categoryId: string;
+  category?: string;
   image?: string;
   images?: string[];
   stock: number;
+  inStock?: boolean;
   sku?: string;
   rating?: number;
-  reviewCount?: number;
+  reviews?: number;
   isFeatured?: boolean;
   isTopSeller?: boolean;
-  promoPercentage?: number;
+  isPromotion?: boolean;
+  discount?: number;
+  specifications?: Array<{ name: string; value: string }>;
+  ivaRate?: number; // IVA rate as percentage (6, 13, or 23). Defaults to 13%
 }
 
-export interface ProductFilter {
-  category?: string;
-  priceMin?: number;
-  priceMax?: number;
-  searchTerm?: string;
-  inStock?: boolean;
-  onPromotion?: boolean;
-  sort?: 'price-asc' | 'price-desc' | 'newest' | 'popularity' | 'rating';
-  page?: number;
-  limit?: number;
-}
-
-export interface ProductsResponse {
-  data: Product[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
+export interface ProductFilters {
+  categories: string[];
+  minPrice: number;
+  maxPrice: number;
+  inStockOnly: boolean;
+  ratings: number[];
+  onPromotion: boolean;
+  searchQuery: string;
 }
 
 export interface ProductsState {
   products: Product[];
   selectedProduct: Product | null;
-  filters: ProductFilter;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-  };
+  relatedProducts: Product[];
   isLoading: boolean;
   error: string | null;
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+  filters: ProductFilters;
+  sortBy: string;
 }
-
-export const initialProductsState: ProductsState = {
-  products: [],
-  selectedProduct: null,
-  filters: { page: 1, limit: 20 },
-  pagination: { page: 1, limit: 20, total: 0 },
-  isLoading: false,
-  error: null
-};

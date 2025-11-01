@@ -81,3 +81,8 @@ export const calculateTotalsSuccess = createAction(
   '[Cart] Calculate Totals Success',
   props<{ subtotal: number; tax: number; deliveryFee: number; discount: number; total: number }>()
 );
+
+// Aliases for backward compatibility
+export const addItem = addToCart;
+export const updateItem = updateCartItem;
+export const removeItem = removeFromCart;

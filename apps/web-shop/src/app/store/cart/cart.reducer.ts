@@ -1,13 +1,26 @@
 import { createReducer, on } from '@ngrx/store';
 import { CartState, initialCartState } from './cart.state';
 import * as CartActions from './cart.actions';
+import { IvaService } from '../../core/services/iva.service';
+
+// Initialize IVA service (will be injected in effects if needed for more complex scenarios)
+const ivaService = new IvaService();
 
 const calculateCartTotals = (items: any[]) => {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * 0.13; // 13% VAT rate (adjustable based on products)
-  const deliveryFee = subtotal >= 30 ? 0 : 3.50; // Free delivery for orders >= €30
+
+  // Calculate tax using product-level IVA rates via IVA service
+  // Each item can have its own IVA rate (6%, 13%, or 23%)
+  const tax = ivaService.calculateTotalTax(items.map(item => ({
+    price: item.price,
+    quantity: item.quantity,
+    ivaRate: item.ivaRate,
+    categoryId: item.categoryId
+  })));
+
+  const deliveryFee = subtotal >= 50 ? 0 : 2.00; // Free delivery for orders >= €50, €2.00 fixed otherwise
   const total = subtotal + tax + deliveryFee;
-  
+
   return { subtotal, tax, deliveryFee, total };
 };
 
@@ -97,7 +110,7 @@ export const cartReducer = createReducer(
     totals: {
       subtotal: 0,
       tax: 0,
-      deliveryFee: 3.50,
+      deliveryFee: 2.00,
       discount: 0,
       total: 0
     },
